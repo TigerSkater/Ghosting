@@ -93,10 +93,9 @@
       }
     ];
 
-    let currentSet = 0;
     let moveCount = 0;
     let totalMoves = 0;
-    let interval;
+    let intervalId = null;
 
     function startDrill() {
       const sets = parseInt(document.getElementById("setsInput").value);
@@ -107,27 +106,25 @@
         return;
       }
 
-      currentSet = 1;
+      // Reset state
+      clearInterval(intervalId);
       moveCount = 0;
       totalMoves = sets * 15;
 
-      runMove(seconds);
-    }
+      intervalId = setInterval(() => {
+        if (moveCount >= totalMoves) {
+          clearInterval(intervalId);
+          document.getElementById("direction").textContent = "Drill Complete!";
+          document.getElementById("image").src = "";
+          return;
+        }
 
-    function runMove(seconds) {
-      if (moveCount >= totalMoves) {
-        document.getElementById("direction").textContent = "Drill Complete!";
-        document.getElementById("image").src = "";
-        return;
-      }
+        const random = directions[Math.floor(Math.random() * directions.length)];
+        document.getElementById("direction").textContent = random.name;
+        document.getElementById("image").src = random.img;
 
-      const random = directions[Math.floor(Math.random() * directions.length)];
-      document.getElementById("direction").textContent = random.name;
-      document.getElementById("image").src = random.img;
-
-      moveCount++;
-
-      setTimeout(() => runMove(seconds), seconds * 1000);
+        moveCount++;
+      }, seconds * 1000);
     }
   </script>
 </body>
