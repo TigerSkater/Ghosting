@@ -9,7 +9,7 @@
       font-family: Arial, sans-serif;
       text-align: center;
       padding: 20px;
-      background: #e6ccff;
+      background: #e6e6fa;
     }
 
     h1 {
@@ -17,9 +17,15 @@
     }
 
     #direction {
-      font-size: 4em;
+      font-size: 3em;
       margin: 0.5em 0;
       color: #2c3e50;
+    }
+
+    #countdown {
+      font-size: 4em;
+      color: #8e44ad;
+      margin: 1em 0;
     }
 
     #image {
@@ -28,16 +34,10 @@
       margin: 0 auto 1em;
     }
 
-    #countdown {
-      font-size: 3em;
-      margin: 0.5em 0;
-      color: #c0392b;
-    }
-
     button {
       font-size: 1.2em;
       padding: 10px 20px;
-      margin: 10px;
+      margin-top: 10px;
     }
 
     input {
@@ -51,15 +51,8 @@
       font-size: 1.2em;
       margin: 0 10px 0 0;
     }
-
-    #breakMark {
-      font-size: 4em;
-      color: green;
-      margin: 0.5em 0;
-    }
   </style>
 </head>
-
 <body>
   <h1>Squash Ghosting Drill</h1>
 
@@ -67,16 +60,18 @@
     <label>Sets:</label>
     <input type="number" id="setsInput" min="1" value="3" />
 
-    <label>Moves per Set:</label>
-    <input type="number" id="movesInput" min="1" value="10" />
+    <label>Moves per set:</label>
+    <input type="number" id="movesInput" min="1" value="15" />
 
-    <label>Seconds per Move:</label>
+    <br><br>
+
+    <label>Seconds per move:</label>
     <input type="number" id="secondsInput" min="1" value="3" />
 
-    <label>Break Time Between Moves (sec):</label>
-    <input type="number" id="breakInput" min="0" value="1" />
+    <label>Break between moves (s):</label>
+    <input type="number" id="moveBreakInput" min="0" value="1" />
 
-    <label>Break Between Sets (sec):</label>
+    <label>Break between sets (s):</label>
     <input type="number" id="setBreakInput" min="1" value="6" />
 
     <br><br>
@@ -86,173 +81,131 @@
 
   <div id="direction"></div>
   <div id="countdown"></div>
-  <div id="breakMark"></div>
   <img id="image" src="" alt="Direction Arrow" />
 
   <script>
     const directions = [
-      {
-        name: "Front Left",
-        img: "https://cdn11.bigcommerce.com/s-3pbmh1zmv/images/stencil/1280x1280/products/3915/4456/PFFS7-2424012__33531.1739389253.png?c=1"
-      },
-      {
-        name: "Front Right",
-        img: "https://cdn11.bigcommerce.com/s-3pbmh1zmv/images/stencil/1280x1280/products/4681/5420/PFFS7-2424011__20606.1739389988.png?c=1"
-      },
-      {
-        name: "Side Left",
-        img: "https://upload.wikimedia.org/wikipedia/commons/d/d7/Eo_circle_green_arrow-left.svg"
-      },
-      {
-        name: "Side Right",
-        img: "https://upload.wikimedia.org/wikipedia/commons/b/bd/Eo_circle_blue_arrow-right.svg"
-      },
-      {
-        name: "Back Left",
-        img: "https://www.roadtrafficsigns.com/img/lg/X/Left-Diagonal-Arrow-Sign-X-W16-7pL.gif"
-      },
-      {
-        name: "Back Right",
-        img: "https://signsolutionsusa.com/wp-content/uploads/sites/6/2024/07/W16-7pR_Fluor-Yellow-Green.webp"
-      }
+      { name: "Front Left", img: "https://cdn11.bigcommerce.com/s-3pbmh1zmv/images/stencil/1280x1280/products/3915/4456/PFFS7-2424012__33531.1739389253.png?c=1" },
+      { name: "Front Right", img: "https://cdn11.bigcommerce.com/s-3pbmh1zmv/images/stencil/1280x1280/products/4681/5420/PFFS7-2424011__20606.1739389988.png?c=1" },
+      { name: "Side Left", img: "https://upload.wikimedia.org/wikipedia/commons/d/d7/Eo_circle_green_arrow-left.svg" },
+      { name: "Side Right", img: "https://upload.wikimedia.org/wikipedia/commons/b/bd/Eo_circle_blue_arrow-right.svg" },
+      { name: "Back Left", img: "https://www.roadtrafficsigns.com/img/lg/X/Left-Diagonal-Arrow-Sign-X-W16-7pL.gif" },
+      { name: "Back Right", img: "https://signsolutionsusa.com/wp-content/uploads/sites/6/2024/07/W16-7pR_Fluor-Yellow-Green.webp" }
     ];
 
-    let currentSet = 0;
-    let moveInSet = 0;
-    let totalSets = 0;
-    let movesPerSet = 0;
-    let moveInterval;
-    let breakSeconds = 1;
-    let moveSeconds = 3;
-    let setBreakSeconds = 6;
-    let isDrillRunning = false;
-    let voiceIndex = 0;
-
-    const voiceLines = [
+    const motivationalLines = [
       "Your break is over. Cry later. Move now.",
       "The floor misses you. Go make it sweat!",
       "Congratulations, you are now… still not done!",
       "Your coach called. They said move it!"
     ];
 
-    function speak(text) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.2;
-      utterance.pitch = 1.5;
-      const voices = window.speechSynthesis.getVoices();
-      const female = voices.find(v => /female/i.test(v.name) || /Google US English/i.test(v.name));
-      if (female) utterance.voice = female;
-      speechSynthesis.speak(utterance);
-    }
+    let currentSet = 0;
+    let moveCount = 0;
+    let totalSets = 0;
+    let movesPerSet = 0;
+    let secondsPerMove = 0;
+    let breakPerMove = 0;
+    let breakPerSet = 0;
+    let interval;
+    let stopped = false;
 
-    function playBeep() {
-      const beep = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
-      beep.play();
-    }
+    const directionEl = document.getElementById("direction");
+    const countdownEl = document.getElementById("countdown");
+    const imageEl = document.getElementById("image");
+
+    const speak = (text) => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      // Use default voice — no voice selection at all
+      speechSynthesis.cancel();
+      speechSynthesis.speak(utterance);
+    };
+
+    const playBeep = () => {
+      const audio = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
+      audio.play();
+    };
 
     function startDrill() {
-      stopDrill(); // Reset if already running
-
+      stopped = false;
+      currentSet = 1;
+      moveCount = 0;
       totalSets = parseInt(document.getElementById("setsInput").value);
       movesPerSet = parseInt(document.getElementById("movesInput").value);
-      moveSeconds = parseInt(document.getElementById("secondsInput").value);
-      breakSeconds = parseInt(document.getElementById("breakInput").value);
-      setBreakSeconds = parseInt(document.getElementById("setBreakInput").value);
+      secondsPerMove = parseInt(document.getElementById("secondsInput").value);
+      breakPerMove = parseInt(document.getElementById("moveBreakInput").value);
+      breakPerSet = parseInt(document.getElementById("setBreakInput").value);
 
-      if (
-        isNaN(totalSets) || isNaN(movesPerSet) ||
-        isNaN(moveSeconds) || isNaN(breakSeconds) || isNaN(setBreakSeconds) ||
-        totalSets <= 0 || movesPerSet <= 0 || moveSeconds <= 0 || breakSeconds < 0
-      ) {
-        alert("Enter valid positive numbers.");
-        return;
-      }
-
-      currentSet = 1;
-      moveInSet = 0;
-      isDrillRunning = true;
       runMove();
     }
 
-    function runMove() {
-      if (!isDrillRunning) return;
+    function stopDrill() {
+      stopped = true;
+      clearTimeout(interval);
+      directionEl.textContent = "Drill Stopped.";
+      imageEl.src = "";
+      countdownEl.textContent = "";
+      speechSynthesis.cancel();
+    }
 
-      if (moveInSet >= movesPerSet) {
+    function runMove() {
+      if (stopped) return;
+
+      if (moveCount >= movesPerSet) {
         if (currentSet >= totalSets) {
-          document.getElementById("direction").textContent = "Drill Complete!";
-          document.getElementById("image").src = "";
-          document.getElementById("countdown").textContent = "";
-          document.getElementById("breakMark").textContent = "";
+          directionEl.textContent = "Drill Complete!";
+          imageEl.src = "";
+          countdownEl.textContent = "";
           return;
         }
-
-        // Between sets break
-        setBreakCountdown(setBreakSeconds, () => {
-          currentSet++;
-          moveInSet = 0;
-          runMove();
-        });
+        runSetBreak();
         return;
       }
 
-      const random = directions[Math.floor(Math.random() * directions.length)];
-      document.getElementById("direction").textContent = random.name;
-      document.getElementById("image").src = random.img;
-      document.getElementById("breakMark").textContent = "";
+      const move = directions[Math.floor(Math.random() * directions.length)];
+      directionEl.textContent = move.name;
+      imageEl.src = move.img;
+      countdownEl.textContent = "";
       playBeep();
-      speak(random.name);
+      speak(move.name);
 
-      moveInSet++;
+      moveCount++;
 
-      setTimeout(() => {
-        document.getElementById("image").src = "";
-        document.getElementById("direction").textContent = "";
-        document.getElementById("breakMark").textContent = "✓";
-        playBeep();
-
+      interval = setTimeout(() => {
+        if (stopped) return;
+        directionEl.textContent = "";
+        imageEl.src = "https://em-content.zobj.net/source/microsoft-teams/363/check-mark_2705.png";
         setTimeout(() => {
+          if (stopped) return;
           runMove();
-        }, breakSeconds * 1000);
-      }, moveSeconds * 1000);
+        }, breakPerMove * 1000);
+      }, secondsPerMove * 1000);
     }
 
-    function setBreakCountdown(seconds, callback) {
-      let remaining = seconds;
-      document.getElementById("image").src = "";
-      document.getElementById("direction").textContent = "";
-      document.getElementById("breakMark").textContent = "";
-      countdownTick();
+    function runSetBreak() {
+      currentSet++;
+      moveCount = 0;
 
-      function countdownTick() {
-        if (!isDrillRunning) return;
+      const motivation = motivationalLines[Math.floor(Math.random() * motivationalLines.length)];
+      speak(motivation);
+      directionEl.textContent = "Break between sets";
+      imageEl.src = "";
 
-        document.getElementById("countdown").textContent = remaining;
-        speak(remaining.toString());
+      let countdown = breakPerSet;
+      countdownEl.textContent = countdown;
+
+      const countdownInterval = setInterval(() => {
+        if (stopped) return clearInterval(countdownInterval);
+        countdown--;
         playBeep();
-
-        if (remaining <= 1) {
-          document.getElementById("countdown").textContent = "";
-          speak(voiceLines[voiceIndex]);
-          voiceIndex = (voiceIndex + 1) % voiceLines.length;
-          callback();
-          return;
+        countdownEl.textContent = countdown;
+        if (countdown <= 0) {
+          clearInterval(countdownInterval);
+          countdownEl.textContent = "";
+          runMove();
         }
-
-        remaining--;
-        setTimeout(countdownTick, 1000);
-      }
+      }, 1000);
     }
-
-    function stopDrill() {
-      isDrillRunning = false;
-      clearTimeout(moveInterval);
-      document.getElementById("direction").textContent = "";
-      document.getElementById("image").src = "";
-      document.getElementById("countdown").textContent = "";
-      document.getElementById("breakMark").textContent = "";
-    }
-
-    window.speechSynthesis.onvoiceschanged = () => {}; // preload voices
   </script>
 </body>
 </html>
