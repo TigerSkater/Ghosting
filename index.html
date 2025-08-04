@@ -31,7 +31,7 @@
     button {
       font-size: 1.2em;
       padding: 10px 20px;
-      margin-top: 10px;
+      margin: 10px 5px 0 5px;
     }
 
     input {
@@ -60,6 +60,7 @@
 
     <br><br>
     <button onclick="startDrill()">Start Drill</button>
+    <button onclick="stopDrill()">Stop Drill</button>
   </div>
 
   <div id="direction"></div>
@@ -106,25 +107,29 @@
         return;
       }
 
-      // Reset state
       clearInterval(intervalId);
       moveCount = 0;
       totalMoves = sets * 15;
 
       intervalId = setInterval(() => {
         if (moveCount >= totalMoves) {
-          clearInterval(intervalId);
+          stopDrill();
           document.getElementById("direction").textContent = "Drill Complete!";
-          document.getElementById("image").src = "";
           return;
         }
 
         const random = directions[Math.floor(Math.random() * directions.length)];
         document.getElementById("direction").textContent = random.name;
         document.getElementById("image").src = random.img;
-
         moveCount++;
       }, seconds * 1000);
+    }
+
+    function stopDrill() {
+      clearInterval(intervalId);
+      intervalId = null;
+      document.getElementById("direction").textContent = "Drill Stopped";
+      document.getElementById("image").src = "";
     }
   </script>
 </body>
