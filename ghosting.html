@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Squash Ghosting Drill</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      background: #f0f4f8;
+    }
+
+    h1 {
+      margin-bottom: 0.5em;
+    }
+
+    #direction {
+      font-size: 3em;
+      margin: 0.5em 0;
+      color: #2c3e50;
+    }
+
+    #image {
+      width: 250px;
+      height: 250px;
+      margin: 0 auto 1em;
+    }
+
+    button {
+      font-size: 1.2em;
+      padding: 10px 20px;
+      margin-top: 10px;
+    }
+
+    input {
+      font-size: 1.2em;
+      padding: 5px;
+      width: 80px;
+      text-align: center;
+    }
+
+    label {
+      font-size: 1.2em;
+      margin: 0 10px 0 0;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Squash Ghosting Drill</h1>
+
+  <div>
+    <label>Sets:</label>
+    <input type="number" id="setsInput" min="1" value="3" />
+
+    <label>Seconds per move:</label>
+    <input type="number" id="secondsInput" min="1" value="6" />
+
+    <br><br>
+    <button onclick="startDrill()">Start Drill</button>
+  </div>
+
+  <div id="direction"></div>
+  <img id="image" src="" alt="Direction Arrow" />
+
+  <script>
+    const directions = [
+      {
+        name: "Front Left",
+        img: "https://cdn11.bigcommerce.com/s-3pbmh1zmv/images/stencil/1280x1280/products/3915/4456/PFFS7-2424012__33531.1739389253.png?c=1"
+      },
+      {
+        name: "Front Right",
+        img: "https://cdn11.bigcommerce.com/s-3pbmh1zmv/images/stencil/1280x1280/products/4681/5420/PFFS7-2424011__20606.1739389988.png?c=1"
+      },
+      {
+        name: "Side Left",
+        img: "https://upload.wikimedia.org/wikipedia/commons/d/d7/Eo_circle_green_arrow-left.svg"
+      },
+      {
+        name: "Side Right",
+        img: "https://upload.wikimedia.org/wikipedia/commons/b/bd/Eo_circle_blue_arrow-right.svg"
+      },
+      {
+        name: "Back Left",
+        img: "https://www.roadtrafficsigns.com/img/lg/X/Left-Diagonal-Arrow-Sign-X-W16-7pL.gif"
+      },
+      {
+        name: "Back Right",
+        img: "https://signsolutionsusa.com/wp-content/uploads/sites/6/2024/07/W16-7pR_Fluor-Yellow-Green.webp"
+      }
+    ];
+
+    let currentSet = 0;
+    let moveCount = 0;
+    let totalMoves = 0;
+    let interval;
+
+    function startDrill() {
+      const sets = parseInt(document.getElementById("setsInput").value);
+      const seconds = parseInt(document.getElementById("secondsInput").value);
+
+      if (isNaN(sets) || isNaN(seconds) || sets <= 0 || seconds <= 0) {
+        alert("Please enter valid positive numbers.");
+        return;
+      }
+
+      currentSet = 1;
+      moveCount = 0;
+      totalMoves = sets * 15;
+
+      runMove(seconds);
+    }
+
+    function runMove(seconds) {
+      if (moveCount >= totalMoves) {
+        document.getElementById("direction").textContent = "Drill Complete!";
+        document.getElementById("image").src = "";
+        return;
+      }
+
+      const random = directions[Math.floor(Math.random() * directions.length)];
+      document.getElementById("direction").textContent = random.name;
+      document.getElementById("image").src = random.img;
+
+      moveCount++;
+
+      setTimeout(() => runMove(seconds), seconds * 1000);
+    }
+  </script>
+</body>
+</html>
