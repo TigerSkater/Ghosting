@@ -42,6 +42,7 @@ const directions = [
   {name:"Back Left",img:"https://www.roadtrafficsigns.com/img/lg/X/Left-Diagonal-Arrow-Sign-X-W16-7pL.gif"},
   {name:"Back Right",img:"https://signsolutionsusa.com/wp-content/uploads/sites/6/2024/07/W16-7pR_Fluor-Yellow-Green.webp"}
 ];
+
 const motivationalLines = [
   "Your break is over. Cry later. Move now.",
   "The floor misses you. Go make it sweat!",
@@ -60,21 +61,33 @@ const directionEl=document.getElementById("direction"),
       startSound=document.getElementById("startSound"),
       breakSound=document.getElementById("breakSound");
 
+// Preload voices once
+let loadedVoices = [];
+function loadVoices() {
+  loadedVoices = speechSynthesis.getVoices();
+}
+speechSynthesis.onvoiceschanged = loadVoices;
+loadVoices();
+
+function speak(text){
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate=1.1;
+  if (loadedVoices.length > 0) {
+    u.voice = loadedVoices.find(v => !v.name.toLowerCase().includes("female")) || loadedVoices[0];
+  }
+  speechSynthesis.cancel();
+  setTimeout(() => {
+    speechSynthesis.speak(u);
+  }, 100);
+}
+
 async function playSound(audio) {
   audio.currentTime = 0;
   try {
     await audio.play();
   } catch(e) {
-    // play() might fail if not triggered by user interaction
-    // console.log('Audio play error:', e);
+    // Ignore playback errors silently
   }
-}
-
-function speak(text){
-  const u = new SpeechSynthesisUtterance(text);
-  u.rate=1.1;
-  speechSynthesis.cancel();
-  speechSynthesis.speak(u);
 }
 
 async function startDrill(){
@@ -85,6 +98,10 @@ async function startDrill(){
   breakPerMove=parseInt(document.getElementById("moveBreakInput").value);
   breakPerSet=parseInt(document.getElementById("setBreakInput").value);
   motivationOn=motivationCheckbox.checked;
+
+  // Ensure voices are loaded after user interaction
+  speechSynthesis.getVoices();
+
   runMove();
 }
 
@@ -105,7 +122,7 @@ async function runMove(){
     runSetBreak();
     return;
   }
-  // play beep first, then show direction after short delay
+
   await playSound(startSound);
   if(stopped) return;
 
@@ -121,8 +138,7 @@ async function runMove(){
     imageEl.src="";
     await playSound(breakSound);
     setTimeout(() => {
-      if(stopped) return;
-      runMove();
+      if(!stopped) runMove();
     }, breakPerMove*1000);
   }, secondsPerMove*1000);
 }
@@ -138,7 +154,6 @@ function runSetBreak(){
     countdown--;
     if(countdown > 0){
       countdownEl.textContent = countdown;
-      // beep on every second except last
       await playSound(startSound);
     } else {
       clearInterval(countdownInterval);
@@ -146,7 +161,7 @@ function runSetBreak(){
       if(motivationOn){
         const msg=motivationalLines[Math.floor(Math.random()*motivationalLines.length)];
         speak(msg);
-        setTimeout(()=>{ if(!stopped) runMove(); },3000);
+        setTimeout(()=>{ if(!stopped) runMove(); }, 3000);
       } else {
         runMove();
       }
