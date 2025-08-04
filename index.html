@@ -141,6 +141,7 @@
     function stopDrill() {
       stopped = true;
       clearTimeout(interval);
+      clearInterval(countdownInterval);
       directionEl.textContent = "Drill Stopped.";
       imageEl.src = "";
       countdownEl.textContent = "";
@@ -181,26 +182,34 @@
       }, secondsPerMove * 1000);
     }
 
+    let countdownInterval;
     function runSetBreak() {
       currentSet++;
       moveCount = 0;
 
-      const motivation = motivationalLines[Math.floor(Math.random() * motivationalLines.length)];
-      speak(motivation);
       directionEl.textContent = "Break between sets";
       imageEl.src = "";
 
       let countdown = breakPerSet;
       countdownEl.textContent = countdown;
 
-      const countdownInterval = setInterval(() => {
-        if (stopped) return clearInterval(countdownInterval);
-        countdown--;
-        playBeep();
-        countdownEl.textContent = countdown;
-        if (countdown <= 0) {
+      countdownInterval = setInterval(() => {
+        if (stopped) {
           clearInterval(countdownInterval);
+          return;
+        }
+        countdown--;
+
+        if (countdown > 0) {
+          // Beep every second except last
+          playBeep();
+          countdownEl.textContent = countdown;
+        } else {
+          // Last second: no beep, say one random motivational line
           countdownEl.textContent = "";
+          const randomMotivation = motivationalLines[Math.floor(Math.random() * motivationalLines.length)];
+          speak(randomMotivation);
+          clearInterval(countdownInterval);
           runMove();
         }
       }, 1000);
