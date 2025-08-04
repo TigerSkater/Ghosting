@@ -35,6 +35,13 @@
       display: none;
     }
 
+    #setBreakCountdown {
+      font-size: 4em;
+      color: #8e44ad;
+      margin: 1em auto;
+      display: none;
+    }
+
     button {
       font-size: 1.2em;
       padding: 10px 20px;
@@ -67,8 +74,11 @@
     <label>Seconds per move:</label>
     <input type="number" id="secondsInput" min="1" value="3" />
 
-    <label>Seconds break time:</label>
+    <label>Seconds break after move:</label>
     <input type="number" id="breakInput" min="0" value="1" />
+
+    <label>Seconds break between sets:</label>
+    <input type="number" id="setBreakInput" min="1" value="6" />
 
     <br><br>
     <button onclick="startDrill()">Start Drill</button>
@@ -78,6 +88,7 @@
   <div id="direction"></div>
   <img id="image" src="" alt="Direction Arrow" />
   <div id="breakMark">✅</div>
+  <div id="setBreakCountdown"></div>
 
   <audio id="startSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
   <audio id="breakSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
@@ -110,16 +121,32 @@
       }
     ];
 
+    const numberImages = {
+      1: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/1_black_circle.svg/1024px-1_black_circle.svg.png",
+      2: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/2_black_circle.svg/1024px-2_black_circle.svg.png",
+      3: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/3_black_circle.svg/1024px-3_black_circle.svg.png",
+      4: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/4_black_circle.svg/1024px-4_black_circle.svg.png",
+      5: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/5_black_circle.svg/1024px-5_black_circle.svg.png",
+      6: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/6_black_circle.svg/1024px-6_black_circle.svg.png"
+    };
+
     let moveCount = 0;
     let totalMoves = 0;
-    let interval;
-    let breakInterval;
+    let currentSet = 1;
+    let totalSets = 0;
+    let movesPerSet = 0;
+    let seconds = 3;
+    let breakTime = 1;
+    let setBreakTime = 6;
+
+    let interval, breakInterval, setBreakInterval;
 
     const startSound = document.getElementById("startSound");
     const breakSound = document.getElementById("breakSound");
     const breakMark = document.getElementById("breakMark");
     const directionText = document.getElementById("direction");
     const imageElem = document.getElementById("image");
+    const setBreakCountdown = document.getElementById("setBreakCountdown");
 
     function speakDirection(text) {
       if ('speechSynthesis' in window) {
@@ -131,53 +158,54 @@
     }
 
     function startDrill() {
-      // Unlock speech synthesis on user interaction
-      if ('speechSynthesis' in window) {
-        speechSynthesis.cancel();
-        const unlockUtterance = new SpeechSynthesisUtterance("");
-        speechSynthesis.speak(unlockUtterance);
-      }
+      speechSynthesis.cancel();
 
       stopDrill();
 
-      const sets = parseInt(document.getElementById("setsInput").value);
-      const movesPerSet = parseInt(document.getElementById("movesInput").value);
-      const seconds = parseInt(document.getElementById("secondsInput").value);
-      const breakTime = parseInt(document.getElementById("breakInput").value);
+      totalSets = parseInt(document.getElementById("setsInput").value);
+      movesPerSet = parseInt(document.getElementById("movesInput").value);
+      seconds = parseInt(document.getElementById("secondsInput").value);
+      breakTime = parseInt(document.getElementById("breakInput").value);
+      setBreakTime = parseInt(document.getElementById("setBreakInput").value);
 
       if (
-        isNaN(sets) || sets <= 0 ||
+        isNaN(totalSets) || totalSets <= 0 ||
         isNaN(movesPerSet) || movesPerSet <= 0 ||
         isNaN(seconds) || seconds <= 0 ||
-        isNaN(breakTime) || breakTime < 0
+        isNaN(breakTime) || breakTime < 0 ||
+        isNaN(setBreakTime) || setBreakTime < 1
       ) {
-        alert("Please enter valid positive numbers (break time can be zero).");
+        alert("Please enter valid inputs.");
         return;
       }
 
       moveCount = 0;
-      totalMoves = sets * movesPerSet;
-
-      runMove(seconds, breakTime);
+      currentSet = 1;
+      totalMoves = movesPerSet;
+      runMove();
     }
 
-    function runMove(seconds, breakTime) {
+    function runMove() {
       if (moveCount >= totalMoves) {
-        directionText.textContent = "Drill Complete!";
-        imageElem.src = "";
-        breakMark.style.display = "none";
-        return;
+        if (currentSet >= totalSets) {
+          directionText.textContent = "Drill Complete!";
+          imageElem.src = "";
+          breakMark.style.display = "none";
+          return;
+        } else {
+          runSetBreak();
+          return;
+        }
       }
 
       const random = directions[Math.floor(Math.random() * directions.length)];
       directionText.textContent = random.name;
       imageElem.src = random.img;
       breakMark.style.display = "none";
+      setBreakCountdown.style.display = "none";
 
-      setTimeout(() => {
-        speakDirection(random.name);
-        startSound.play();
-      }, 100);
+      startSound.play();
+      speakDirection(random.name);
 
       moveCount++;
 
@@ -185,21 +213,48 @@
         directionText.textContent = "";
         imageElem.src = "";
         breakMark.style.display = "block";
-
         breakSound.play();
 
         breakInterval = setTimeout(() => {
-          runMove(seconds, breakTime);
+          runMove();
         }, breakTime * 1000);
       }, seconds * 1000);
+    }
+
+    function runSetBreak() {
+      moveCount = 0;
+      currentSet++;
+      totalMoves = movesPerSet;
+      directionText.textContent = `Set ${currentSet} starting soon...`;
+      breakMark.style.display = "none";
+      imageElem.src = "";
+      setBreakCountdown.style.display = "block";
+
+      let counter = setBreakTime;
+
+      function countdown() {
+        if (counter <= 0) {
+          setBreakCountdown.style.display = "none";
+          runMove();
+          return;
+        }
+
+        setBreakCountdown.innerHTML = `<img src="${numberImages[counter] || ''}" alt="${counter}" width="120" />`;
+        counter--;
+        setBreakInterval = setTimeout(countdown, 1000);
+      }
+
+      countdown();
     }
 
     function stopDrill() {
       clearTimeout(interval);
       clearTimeout(breakInterval);
+      clearTimeout(setBreakInterval);
       directionText.textContent = "Drill Stopped.";
       imageElem.src = "";
       breakMark.style.display = "none";
+      setBreakCountdown.style.display = "none";
       speechSynthesis.cancel();
     }
   </script>
