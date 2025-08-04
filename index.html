@@ -40,7 +40,7 @@
       margin-top: 10px;
     }
 
-    input {
+    input[type="number"] {
       font-size: 1.2em;
       padding: 5px;
       width: 80px;
@@ -50,6 +50,14 @@
     label {
       font-size: 1.2em;
       margin: 0 10px 0 0;
+    }
+
+    #motivationContainer {
+      margin-top: 10px;
+    }
+
+    #motivationLabel {
+      font-size: 1.1em;
     }
   </style>
 </head>
@@ -73,6 +81,11 @@
 
     <label>Break between sets (s):</label>
     <input type="number" id="setBreakInput" min="1" value="6" />
+
+    <div id="motivationContainer">
+      <input type="checkbox" id="motivationCheckbox" checked />
+      <label for="motivationCheckbox" id="motivationLabel">Enable Motivational Messages</label>
+    </div>
 
     <br><br>
     <button onclick="startDrill()">Start Drill</button>
@@ -110,10 +123,12 @@
     let interval;
     let countdownInterval;
     let stopped = false;
+    let motivationOn = true;
 
     const directionEl = document.getElementById("direction");
     const countdownEl = document.getElementById("countdown");
     const imageEl = document.getElementById("image");
+    const motivationCheckbox = document.getElementById("motivationCheckbox");
 
     const speak = (text) => {
       const utterance = new SpeechSynthesisUtterance(text);
@@ -136,6 +151,7 @@
       secondsPerMove = parseInt(document.getElementById("secondsInput").value);
       breakPerMove = parseInt(document.getElementById("moveBreakInput").value);
       breakPerSet = parseInt(document.getElementById("setBreakInput").value);
+      motivationOn = motivationCheckbox.checked;
 
       runMove();
     }
@@ -190,7 +206,6 @@
 
       directionEl.textContent = "Break between sets";
       imageEl.src = "";
-
       let countdown = breakPerSet;
       countdownEl.textContent = countdown;
 
@@ -208,12 +223,17 @@
         } else {
           clearInterval(countdownInterval);
           countdownEl.textContent = "";
-          const randomMotivation = motivationalLines[Math.floor(Math.random() * motivationalLines.length)];
-          speak(randomMotivation);
 
-          setTimeout(() => {
-            if (!stopped) runMove();
-          }, 3000); // wait 3 seconds after speech
+          if (motivationOn) {
+            const randomMotivation = motivationalLines[Math.floor(Math.random() * motivationalLines.length)];
+            speak(randomMotivation);
+            setTimeout(() => {
+              if (!stopped) runMove();
+            }, 3000);
+          } else {
+            playBeep();
+            runMove();
+          }
         }
       }, 1000);
     }
