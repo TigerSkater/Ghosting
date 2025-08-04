@@ -1,242 +1,138 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Squash Ghosting Drill</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 20px;
-      background: #f3e8ff;
-    }
-
-    h1 {
-      margin-bottom: 0.5em;
-    }
-
-    #direction {
-      font-size: 3em;
-      margin: 0.5em 0;
-      color: #2c3e50;
-    }
-
-    #countdown {
-      font-size: 4em;
-      color: #8e44ad;
-      margin: 1em 0;
-    }
-
-    #image {
-      width: 250px;
-      height: 250px;
-      margin: 0 auto 1em;
-    }
-
-    button {
-      font-size: 1.2em;
-      padding: 10px 20px;
-      margin-top: 10px;
-    }
-
-    input[type="number"] {
-      font-size: 1.2em;
-      padding: 5px;
-      width: 80px;
-      text-align: center;
-    }
-
-    label {
-      font-size: 1.2em;
-      margin: 0 10px 0 0;
-    }
-
-    #motivationContainer {
-      margin-top: 10px;
-    }
-
-    #motivationLabel {
-      font-size: 1.1em;
-    }
+    body { font-family: Arial; text-align: center; padding: 20px; background: #f3e8ff; }
+    #direction { font-size: 3em; margin: .5em 0; color: #2c3e50; }
+    #countdown { font-size: 4em; color: #8e44ad; margin: 1em 0; }
+    #image { width: 250px; height: 250px; margin: 0 auto 1em; }
+    input, button { font-size: 1.2em; padding: 5px; margin: 5px; }
+    label { font-size: 1.2em; margin: 0 10px 0 0; }
   </style>
 </head>
 <body>
   <h1>Squash Ghosting Drill</h1>
-
   <div>
-    <label>Sets:</label>
-    <input type="number" id="setsInput" min="1" value="3" />
-
-    <label>Moves per set:</label>
-    <input type="number" id="movesInput" min="1" value="15" />
-
+    <label>Sets:</label><input type="number" id="setsInput" min="1" value="3"/>
+    <label>Moves per set:</label><input type="number" id="movesInput" min="1" value="15"/>
     <br><br>
-
-    <label>Seconds per move:</label>
-    <input type="number" id="secondsInput" min="1" value="3" />
-
-    <label>Break between moves (s):</label>
-    <input type="number" id="moveBreakInput" min="0" value="1" />
-
-    <label>Break between sets (s):</label>
-    <input type="number" id="setBreakInput" min="1" value="6" />
-
-    <div id="motivationContainer">
-      <input type="checkbox" id="motivationCheckbox" checked />
-      <label for="motivationCheckbox" id="motivationLabel">Enable Motivational Messages</label>
-    </div>
-
+    <label>Seconds per move:</label><input type="number" id="secondsInput" min="1" value="3"/>
+    <label>Break between moves (s):</label><input type="number" id="moveBreakInput" min="0" value="1"/>
+    <label>Break between sets (s):</label><input type="number" id="setBreakInput" min="1" value="6"/>
+    <div><input type="checkbox" id="motivationCheckbox" checked/><label for="motivationCheckbox">Enable Motivational Messages</label></div>
     <br><br>
     <button onclick="startDrill()">Start Drill</button>
     <button onclick="stopDrill()">Stop Drill</button>
   </div>
-
   <div id="direction"></div>
   <div id="countdown"></div>
-  <img id="image" src="" alt="Direction Arrow" />
+  <img id="image" src="" alt="Direction Arrow"/>
 
-  <script>
-    const directions = [
-      { name: "Front Left", img: "https://cdn11.bigcommerce.com/s-3pbmh1zmv/images/stencil/1280x1280/products/3915/4456/PFFS7-2424012__33531.1739389253.png?c=1" },
-      { name: "Front Right", img: "https://cdn11.bigcommerce.com/s-3pbmh1zmv/images/stencil/1280x1280/products/4681/5420/PFFS7-2424011__20606.1739389988.png?c=1" },
-      { name: "Side Left", img: "https://upload.wikimedia.org/wikipedia/commons/d/d7/Eo_circle_green_arrow-left.svg" },
-      { name: "Side Right", img: "https://upload.wikimedia.org/wikipedia/commons/b/bd/Eo_circle_blue_arrow-right.svg" },
-      { name: "Back Left", img: "https://www.roadtrafficsigns.com/img/lg/X/Left-Diagonal-Arrow-Sign-X-W16-7pL.gif" },
-      { name: "Back Right", img: "https://signsolutionsusa.com/wp-content/uploads/sites/6/2024/07/W16-7pR_Fluor-Yellow-Green.webp" }
-    ];
+<script>
+const directions = [
+  {name:"Front Left",img:"https://cdn11.bigcommerce.com/s-3pbmh1zmv/images/..."},
+  {name:"Front Right",img:"..."},
+  {name:"Side Left",img:"..."},
+  {name:"Side Right",img:"..."},
+  {name:"Back Left",img:"..."},
+  {name:"Back Right",img:"..."}
+];
+const motivationalLines = [
+  "Your break is over. Cry later. Move now.",
+  "The floor misses you. Go make it sweat!",
+  "Congratulations, you are now… still not done!",
+  "Your coach called. They said move it!"
+];
 
-    const motivationalLines = [
-      "Your break is over. Cry later. Move now.",
-      "The floor misses you. Go make it sweat!",
-      "Congratulations, you are now… still not done!",
-      "Your coach called. They said move it!"
-    ];
+let currentSet=0, moveCount=0, totalSets=0, movesPerSet=0,
+    secondsPerMove=0, breakPerMove=0, breakPerSet=0,
+    interval, countdownInterval, stopped=false, motivationOn=true;
 
-    let currentSet = 0;
-    let moveCount = 0;
-    let totalSets = 0;
-    let movesPerSet = 0;
-    let secondsPerMove = 0;
-    let breakPerMove = 0;
-    let breakPerSet = 0;
-    let interval;
-    let countdownInterval;
-    let stopped = false;
-    let motivationOn = true;
+const directionEl=document.getElementById("direction"),
+      countdownEl=document.getElementById("countdown"),
+      imageEl=document.getElementById("image"),
+      motivationCheckbox=document.getElementById("motivationCheckbox");
 
-    const directionEl = document.getElementById("direction");
-    const countdownEl = document.getElementById("countdown");
-    const imageEl = document.getElementById("image");
-    const motivationCheckbox = document.getElementById("motivationCheckbox");
+function speak(text){
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate=1.1;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
+}
 
-    const speak = (text) => {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.1;
-      speechSynthesis.cancel();
-      speechSynthesis.speak(utterance);
-    };
+function playBeep(){ new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg").play(); }
+function playBonk(){ new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg").play(); }
 
-    const playBeep = () => {
-      const audio = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
-      audio.play();
-    };
+function startDrill(){
+  stopped=false; currentSet=1; moveCount=0;
+  totalSets=parseInt(document.getElementById("setsInput").value);
+  movesPerSet=parseInt(document.getElementById("movesInput").value);
+  secondsPerMove=parseInt(document.getElementById("secondsInput").value);
+  breakPerMove=parseInt(document.getElementById("moveBreakInput").value);
+  breakPerSet=parseInt(document.getElementById("setBreakInput").value);
+  motivationOn=motivationCheckbox.checked;
+  runMove();
+}
 
-    function startDrill() {
-      stopped = false;
-      currentSet = 1;
-      moveCount = 0;
-      totalSets = parseInt(document.getElementById("setsInput").value);
-      movesPerSet = parseInt(document.getElementById("movesInput").value);
-      secondsPerMove = parseInt(document.getElementById("secondsInput").value);
-      breakPerMove = parseInt(document.getElementById("moveBreakInput").value);
-      breakPerSet = parseInt(document.getElementById("setBreakInput").value);
-      motivationOn = motivationCheckbox.checked;
+function stopDrill(){
+  stopped=true;
+  clearTimeout(interval); clearInterval(countdownInterval);
+  directionEl.textContent="Drill Stopped."; imageEl.src="";
+  countdownEl.textContent=""; speechSynthesis.cancel();
+}
 
+function runMove(){
+  if(stopped) return;
+  if(moveCount>=movesPerSet){
+    if(currentSet>=totalSets){
+      directionEl.textContent="Drill Complete!"; imageEl.src=""; countdownEl.textContent="";
+      return;
+    }
+    runSetBreak(); return;
+  }
+  const move=directions[Math.floor(Math.random()*directions.length)];
+  directionEl.textContent=move.name;
+  imageEl.src=move.img;
+  countdownEl.textContent="";
+  playBeep(); speak(move.name);
+  moveCount++;
+  interval=setTimeout(()=>{
+    if(stopped) return;
+    directionEl.textContent=""; imageEl.src="";
+    playBonk(); // <-- bonk sound after image
+    setTimeout(() => {
+      if(stopped) return;
       runMove();
-    }
+    }, breakPerMove*1000);
+  }, secondsPerMove*1000);
+}
 
-    function stopDrill() {
-      stopped = true;
-      clearTimeout(interval);
-      clearInterval(countdownInterval);
-      directionEl.textContent = "Drill Stopped.";
-      imageEl.src = "";
-      countdownEl.textContent = "";
-      speechSynthesis.cancel();
-    }
-
-    function runMove() {
-      if (stopped) return;
-
-      if (moveCount >= movesPerSet) {
-        if (currentSet >= totalSets) {
-          directionEl.textContent = "Drill Complete!";
-          imageEl.src = "";
-          countdownEl.textContent = "";
-          return;
-        }
-        runSetBreak();
-        return;
-      }
-
-      const move = directions[Math.floor(Math.random() * directions.length)];
-      directionEl.textContent = move.name;
-      imageEl.src = move.img;
-      countdownEl.textContent = "";
+function runSetBreak(){
+  currentSet++; moveCount=0;
+  directionEl.textContent="Break between sets"; imageEl.src="";
+  let countdown = breakPerSet;
+  countdownEl.textContent = countdown;
+  countdownInterval = setInterval(()=>{
+    if(stopped){clearInterval(countdownInterval);return;}
+    countdown--;
+    if(countdown > 0){
       playBeep();
-      speak(move.name);
-
-      moveCount++;
-
-      interval = setTimeout(() => {
-        if (stopped) return;
-        directionEl.textContent = "";
-        imageEl.src = "https://em-content.zobj.net/source/microsoft-teams/363/check-mark_2705.png";
-        setTimeout(() => {
-          if (stopped) return;
-          runMove();
-        }, breakPerMove * 1000);
-      }, secondsPerMove * 1000);
-    }
-
-    function runSetBreak() {
-      currentSet++;
-      moveCount = 0;
-
-      directionEl.textContent = "Break between sets";
-      imageEl.src = "";
-      let countdown = breakPerSet;
       countdownEl.textContent = countdown;
-
-      countdownInterval = setInterval(() => {
-        if (stopped) {
-          clearInterval(countdownInterval);
-          return;
-        }
-
-        countdown--;
-
-        if (countdown > 0) {
-          playBeep();
-          countdownEl.textContent = countdown;
-        } else {
-          clearInterval(countdownInterval);
-          countdownEl.textContent = "";
-
-          if (motivationOn) {
-            const randomMotivation = motivationalLines[Math.floor(Math.random() * motivationalLines.length)];
-            speak(randomMotivation);
-            setTimeout(() => {
-              if (!stopped) runMove();
-            }, 3000);
-          } else {
-            playBeep();
-            runMove();
-          }
-        }
-      }, 1000);
+    } else {
+      clearInterval(countdownInterval);
+      countdownEl.textContent = "";
+      if(motivationOn){
+        const msg=motivationalLines[Math.floor(Math.random()*motivationalLines.length)];
+        speak(msg);
+        setTimeout(()=>{ if(!stopped) runMove(); },3000);
+      } else {
+        playBeep(); runMove();
+      }
     }
-  </script>
+  },1000);
+}
+</script>
 </body>
 </html>
