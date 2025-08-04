@@ -9,7 +9,7 @@
       font-family: Arial, sans-serif;
       text-align: center;
       padding: 20px;
-      background: #e6e0f8; /* Light purple background */
+      background: #e6e0f8; /* Light purple */
     }
 
     h1 {
@@ -31,7 +31,7 @@
     button {
       font-size: 1.2em;
       padding: 10px 20px;
-      margin: 10px;
+      margin: 10px 5px;
     }
 
     input {
@@ -47,7 +47,6 @@
     }
   </style>
 </head>
-
 <body>
   <h1>Squash Ghosting Drill</h1>
 
@@ -56,7 +55,7 @@
     <input type="number" id="setsInput" min="1" value="3" />
 
     <label>Seconds per move:</label>
-    <input type="number" id="secondsInput" min="1" value="6" />
+    <input type="number" id="secondsInput" min="1" value="3" />
 
     <br><br>
     <button onclick="startDrill()">Start Drill</button>
@@ -65,8 +64,6 @@
 
   <div id="direction"></div>
   <img id="image" src="" alt="Direction Arrow" />
-
-  <audio id="moveSound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg" preload="auto"></audio>
 
   <script>
     const directions = [
@@ -96,11 +93,14 @@
       }
     ];
 
-    let moveInterval;
     let moveCount = 0;
     let totalMoves = 0;
+    let interval;
+    let breakInterval;
 
     function startDrill() {
+      stopDrill(); // Clear any previous interval
+
       const sets = parseInt(document.getElementById("setsInput").value);
       const seconds = parseInt(document.getElementById("secondsInput").value);
 
@@ -109,33 +109,40 @@
         return;
       }
 
-      clearInterval(moveInterval);
       moveCount = 0;
       totalMoves = sets * 15;
 
-      runMove(); // Start immediately
-      moveInterval = setInterval(runMove, seconds * 1000);
+      runMove(seconds);
     }
 
-    function runMove() {
+    function runMove(seconds) {
       if (moveCount >= totalMoves) {
         document.getElementById("direction").textContent = "Drill Complete!";
         document.getElementById("image").src = "";
-        clearInterval(moveInterval);
         return;
       }
 
       const random = directions[Math.floor(Math.random() * directions.length)];
       document.getElementById("direction").textContent = random.name;
       document.getElementById("image").src = random.img;
-      document.getElementById("moveSound").play();
 
       moveCount++;
+
+      // Show move for X seconds, then clear for 1 sec
+      interval = setTimeout(() => {
+        document.getElementById("direction").textContent = "";
+        document.getElementById("image").src = "";
+
+        breakInterval = setTimeout(() => {
+          runMove(seconds);
+        }, 1000); // 1-second break
+      }, seconds * 1000);
     }
 
     function stopDrill() {
-      clearInterval(moveInterval);
-      document.getElementById("direction").textContent = "Drill Stopped";
+      clearTimeout(interval);
+      clearTimeout(breakInterval);
+      document.getElementById("direction").textContent = "Drill Stopped.";
       document.getElementById("image").src = "";
     }
   </script>
