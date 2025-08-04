@@ -52,7 +52,21 @@
       margin-top: 1em;
       color: #7a4069;
     }
+    #floatingGhost {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 80px;
+      opacity: 0.9;
+      z-index: 10;
+      animation: floatGhost 3s ease-in-out infinite;
+    }
 
+    @keyframes floatGhost {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
+      100% { transform: translateY(0); }
+    }
     input, button {
       font-size: 1.2em;
       padding: 5px;
@@ -68,6 +82,9 @@
   </style>
 </head>
 <body>
+  <img src="https://i.pinimg.com/originals/99/37/30/993730e1d3019ac8611e2401b63fbc16.gif"
+    alt="Floating Ghost" 
+    id="floatingGhost" />
   <h1>Squash Ghosting Drill</h1>
   <div>
     <label>Sets:</label><input type="number" id="setsInput" min="1" value="3"/>
