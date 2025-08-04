@@ -8,4 +8,5 @@ Open `index.html` in any modern browser to start the drill.
 
 ---
 
-Created by Skatergirl_st
+Created by Sofia Tang
+Idea by:
