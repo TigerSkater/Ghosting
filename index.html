@@ -4,12 +4,36 @@
   <meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Squash Ghosting Drill</title>
   <style>
-    body { font-family: Arial; text-align: center; padding: 20px; background: #f3e8ff; }
-    #direction { font-size: 3em; margin: .5em 0; color: #2c3e50; }
-    #countdown { font-size: 4em; color: #8e44ad; margin: 1em 0; }
-    #image { width: 250px; height: 250px; margin: 0 auto 1em; }
-    input, button { font-size: 1.2em; padding: 5px; margin: 5px; }
-    label { font-size: 1.2em; margin: 0 10px 0 0; }
+    body {
+      font-family: Arial;
+      text-align: center;
+      padding: 20px;
+      background: #a0e9e0; /* teal background */
+    }
+    #direction {
+      font-size: 3em;
+      margin: .5em 0;
+      color: #2c3e50;
+    }
+    #countdown {
+      font-size: 4em;
+      color: #8e44ad;
+      margin: 1em 0;
+    }
+    #image {
+      width: 250px;
+      height: 250px;
+      margin: 0 auto 1em;
+    }
+    input, button {
+      font-size: 1.2em;
+      padding: 5px;
+      margin: 5px;
+    }
+    label {
+      font-size: 1.2em;
+      margin: 0 10px 0 0;
+    }
   </style>
 </head>
 <body>
@@ -21,7 +45,10 @@
     <label>Seconds per move:</label><input type="number" id="secondsInput" min="1" value="3"/>
     <label>Break between moves (s):</label><input type="number" id="moveBreakInput" min="0" value="1"/>
     <label>Break between sets (s):</label><input type="number" id="setBreakInput" min="1" value="6"/>
-    <div><input type="checkbox" id="motivationCheckbox" checked/><label for="motivationCheckbox">Enable Motivational Messages</label></div>
+    <div>
+      <input type="checkbox" id="motivationCheckbox" checked/>
+      <label for="motivationCheckbox">Enable Motivational Messages</label>
+    </div>
     <br><br>
     <button onclick="startDrill()">Start Drill</button>
     <button onclick="stopDrill()">Stop Drill</button>
@@ -30,18 +57,14 @@
   <div id="countdown"></div>
   <img id="image" src="" alt="Direction Arrow"/>
 
-  <!-- Sounds -->
-  <audio id="startSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
-  <audio id="breakSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
-
 <script>
 const directions = [
-  {name:"Front Left",img:"https://cdn11.bigcommerce.com/s-3pbmh1zmv/images/stencil/1280x1280/products/3915/4456/PFFS7-2424012__33531.1739389253.png?c=1"},
-  {name:"Front Right",img:"https://cdn11.bigcommerce.com/s-3pbmh1zmv/images/stencil/1280x1280/products/4681/5420/PFFS7-2424011__20606.1739389988.png?c=1"},
-  {name:"Side Left",img:"https://upload.wikimedia.org/wikipedia/commons/d/d7/Eo_circle_green_arrow-left.svg"},
-  {name:"Side Right",img:"https://upload.wikimedia.org/wikipedia/commons/b/bd/Eo_circle_blue_arrow-right.svg"},
-  {name:"Back Left",img:"https://www.roadtrafficsigns.com/img/lg/X/Left-Diagonal-Arrow-Sign-X-W16-7pL.gif"},
-  {name:"Back Right",img:"https://signsolutionsusa.com/wp-content/uploads/sites/6/2024/07/W16-7pR_Fluor-Yellow-Green.webp"}
+  {name:"Front Left", img:"https://cdn11.bigcommerce.com/s-3pbmh1zmv/images/stencil/1280x1280/products/285/633/arrow_left_up__53068.1506275334.png"},
+  {name:"Front Right", img:"https://cdn11.bigcommerce.com/s-3pbmh1zmv/images/stencil/1280x1280/products/286/635/arrow_right_up__64695.1506275465.png"},
+  {name:"Side Left", img:"https://cdn11.bigcommerce.com/s-3pbmh1zmv/images/stencil/1280x1280/products/287/637/arrow_left__40514.1506275587.png"},
+  {name:"Side Right", img:"https://cdn11.bigcommerce.com/s-3pbmh1zmv/images/stencil/1280x1280/products/288/639/arrow_right__25397.1506275664.png"},
+  {name:"Back Left", img:"https://cdn11.bigcommerce.com/s-3pbmh1zmv/images/stencil/1280x1280/products/289/641/arrow_left_down__55838.1506275735.png"},
+  {name:"Back Right", img:"https://cdn11.bigcommerce.com/s-3pbmh1zmv/images/stencil/1280x1280/products/290/643/arrow_right_down__85171.1506275816.png"}
 ];
 
 const motivationalLines = [
@@ -51,32 +74,39 @@ const motivationalLines = [
   "Your coach called. They said move it!"
 ];
 
-let currentSet=0, moveCount=0, totalSets=0, movesPerSet=0,
-    secondsPerMove=0, breakPerMove=0, breakPerSet=0,
-    interval, countdownInterval, stopped=false, motivationOn=true;
+let currentSet = 0, moveCount = 0, totalSets = 0, movesPerSet = 0,
+    secondsPerMove = 0, breakPerMove = 0, breakPerSet = 0,
+    interval, countdownInterval, stopped = false, motivationOn = true;
 
 const directionEl = document.getElementById("direction"),
       countdownEl = document.getElementById("countdown"),
       imageEl = document.getElementById("image"),
-      motivationCheckbox = document.getElementById("motivationCheckbox"),
-      startSound = document.getElementById("startSound"),
-      breakSound = document.getElementById("breakSound");
+      motivationCheckbox = document.getElementById("motivationCheckbox");
 
-const speak = (text) => {
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.rate = 1.3;
-  utterance.pitch = 1;
-  utterance.volume = 1;
-  utterance.lang = 'en-US';
+function speak(text) {
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 1.1;
   speechSynthesis.cancel();
-  speechSynthesis.speak(utterance);
-};
+  speechSynthesis.speak(u);
+}
 
-async function playSound(audio) {
-  audio.currentTime = 0;
-  try {
-    await audio.play();
-  } catch (e) {}
+function playBeep() {
+  new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg").play();
+}
+
+function playBonk() {
+  new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg").play();
+}
+
+function startDrill() {
+  stopped = false; currentSet = 1; moveCount = 0;
+  totalSets = parseInt(document.getElementById("setsInput").value);
+  movesPerSet = parseInt(document.getElementById("movesInput").value);
+  secondsPerMove = parseInt(document.getElementById("secondsInput").value);
+  breakPerMove = parseInt(document.getElementById("moveBreakInput").value);
+  breakPerSet = parseInt(document.getElementById("setBreakInput").value);
+  motivationOn = motivationCheckbox.checked;
+  runMove();
 }
 
 function stopDrill() {
@@ -89,20 +119,7 @@ function stopDrill() {
   speechSynthesis.cancel();
 }
 
-async function startDrill() {
-  stopped = false;
-  currentSet = 1;
-  moveCount = 0;
-  totalSets = parseInt(document.getElementById("setsInput").value);
-  movesPerSet = parseInt(document.getElementById("movesInput").value);
-  secondsPerMove = parseInt(document.getElementById("secondsInput").value);
-  breakPerMove = parseInt(document.getElementById("moveBreakInput").value);
-  breakPerSet = parseInt(document.getElementById("setBreakInput").value);
-  motivationOn = motivationCheckbox.checked;
-  runMove();
-}
-
-async function runMove() {
+function runMove() {
   if (stopped) return;
   if (moveCount >= movesPerSet) {
     if (currentSet >= totalSets) {
@@ -111,24 +128,21 @@ async function runMove() {
       countdownEl.textContent = "";
       return;
     }
-    runSetBreak();
-    return;
+    runSetBreak(); return;
   }
-
-  await playSound(startSound);
-  if (stopped) return;
 
   const move = directions[Math.floor(Math.random() * directions.length)];
   directionEl.textContent = move.name;
   imageEl.src = move.img;
-  speak(move.name);
+  countdownEl.textContent = "";
+  playBeep(); speak(move.name);
   moveCount++;
 
-  interval = setTimeout(async () => {
+  interval = setTimeout(() => {
     if (stopped) return;
     directionEl.textContent = "";
     imageEl.src = "";
-    await playSound(breakSound);
+    playBonk(); // bonk after image disappears
     setTimeout(() => {
       if (!stopped) runMove();
     }, breakPerMove * 1000);
@@ -143,19 +157,15 @@ function runSetBreak() {
   let countdown = breakPerSet;
   countdownEl.textContent = countdown;
 
-  // Immediately beep on first second
-  playSound(startSound);
-
-  countdownInterval = setInterval(async () => {
+  countdownInterval = setInterval(() => {
     if (stopped) {
       clearInterval(countdownInterval);
       return;
     }
     countdown--;
-
     if (countdown > 0) {
       countdownEl.textContent = countdown;
-      await playSound(startSound);
+      playBeep();
     } else {
       clearInterval(countdownInterval);
       countdownEl.textContent = "";
@@ -164,8 +174,9 @@ function runSetBreak() {
         speak(msg);
         setTimeout(() => {
           if (!stopped) runMove();
-        }, 2500);
+        }, 3000);
       } else {
+        playBeep();
         runMove();
       }
     }
