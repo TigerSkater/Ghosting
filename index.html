@@ -30,7 +30,6 @@
   <div id="countdown"></div>
   <img id="image" src="" alt="Direction Arrow"/>
 
-  <!-- Original sounds as audio elements -->
   <audio id="startSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
   <audio id="breakSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
 
@@ -61,6 +60,16 @@ const directionEl=document.getElementById("direction"),
       startSound=document.getElementById("startSound"),
       breakSound=document.getElementById("breakSound");
 
+async function playSound(audio) {
+  audio.currentTime = 0;
+  try {
+    await audio.play();
+  } catch(e) {
+    // play() might fail if not triggered by user interaction
+    // console.log('Audio play error:', e);
+  }
+}
+
 function speak(text){
   const u = new SpeechSynthesisUtterance(text);
   u.rate=1.1;
@@ -68,16 +77,7 @@ function speak(text){
   speechSynthesis.speak(u);
 }
 
-function playBeep() {
-  startSound.currentTime = 0;
-  startSound.play();
-}
-function playBonk() {
-  breakSound.currentTime = 0;
-  breakSound.play();
-}
-
-function startDrill(){
+async function startDrill(){
   stopped=false; currentSet=1; moveCount=0;
   totalSets=parseInt(document.getElementById("setsInput").value);
   movesPerSet=parseInt(document.getElementById("movesInput").value);
@@ -95,7 +95,7 @@ function stopDrill(){
   countdownEl.textContent=""; speechSynthesis.cancel();
 }
 
-function runMove(){
+async function runMove(){
   if(stopped) return;
   if(moveCount>=movesPerSet){
     if(currentSet>=totalSets){
@@ -105,17 +105,21 @@ function runMove(){
     runSetBreak();
     return;
   }
+  // play beep first, then show direction after short delay
+  await playSound(startSound);
+  if(stopped) return;
+
   const move=directions[Math.floor(Math.random()*directions.length)];
   directionEl.textContent=move.name;
   imageEl.src=move.img;
-  playBeep(); // beep before move
   speak(move.name);
   moveCount++;
-  interval=setTimeout(()=>{
+
+  interval=setTimeout(async ()=>{
     if(stopped) return;
     directionEl.textContent="";
     imageEl.src="";
-    playBonk(); // bonk after move
+    await playSound(breakSound);
     setTimeout(() => {
       if(stopped) return;
       runMove();
@@ -128,11 +132,14 @@ function runSetBreak(){
   directionEl.textContent="Break between sets"; imageEl.src="";
   let countdown = breakPerSet;
   countdownEl.textContent = countdown;
-  countdownInterval = setInterval(()=>{
+
+  countdownInterval = setInterval(async ()=>{
     if(stopped){clearInterval(countdownInterval);return;}
     countdown--;
     if(countdown > 0){
       countdownEl.textContent = countdown;
+      // beep on every second except last
+      await playSound(startSound);
     } else {
       clearInterval(countdownInterval);
       countdownEl.textContent = "";
