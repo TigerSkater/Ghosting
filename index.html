@@ -65,6 +65,9 @@ const directionEl = document.getElementById("direction"),
 const speak = (text) => {
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.rate = 1.1;
+  utterance.pitch = 1;
+  utterance.volume = 1;
+  utterance.lang = 'en-US';
   speechSynthesis.cancel();
   speechSynthesis.speak(utterance);
 };
@@ -140,6 +143,9 @@ function runSetBreak() {
   let countdown = breakPerSet;
   countdownEl.textContent = countdown;
 
+  // Immediately beep on first second
+  playSound(startSound);
+
   countdownInterval = setInterval(async () => {
     if (stopped) {
       clearInterval(countdownInterval);
@@ -149,7 +155,6 @@ function runSetBreak() {
 
     if (countdown > 0) {
       countdownEl.textContent = countdown;
-      // Only beep if not last second
       await playSound(startSound);
     } else {
       clearInterval(countdownInterval);
@@ -159,7 +164,7 @@ function runSetBreak() {
         speak(msg);
         setTimeout(() => {
           if (!stopped) runMove();
-        }, 3000);
+        }, 2500);
       } else {
         runMove();
       }
