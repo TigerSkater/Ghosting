@@ -30,6 +30,7 @@
   <div id="countdown"></div>
   <img id="image" src="" alt="Direction Arrow"/>
 
+  <!-- Sounds -->
   <audio id="startSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
   <audio id="breakSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
 
@@ -54,69 +55,57 @@ let currentSet=0, moveCount=0, totalSets=0, movesPerSet=0,
     secondsPerMove=0, breakPerMove=0, breakPerSet=0,
     interval, countdownInterval, stopped=false, motivationOn=true;
 
-const directionEl=document.getElementById("direction"),
-      countdownEl=document.getElementById("countdown"),
-      imageEl=document.getElementById("image"),
-      motivationCheckbox=document.getElementById("motivationCheckbox"),
-      startSound=document.getElementById("startSound"),
-      breakSound=document.getElementById("breakSound");
+const directionEl = document.getElementById("direction"),
+      countdownEl = document.getElementById("countdown"),
+      imageEl = document.getElementById("image"),
+      motivationCheckbox = document.getElementById("motivationCheckbox"),
+      startSound = document.getElementById("startSound"),
+      breakSound = document.getElementById("breakSound");
 
-// Preload voices once
-let loadedVoices = [];
-function loadVoices() {
-  loadedVoices = speechSynthesis.getVoices();
-}
-speechSynthesis.onvoiceschanged = loadVoices;
-loadVoices();
-
-function speak(text){
-  const u = new SpeechSynthesisUtterance(text);
-  u.rate=1.1;
-  if (loadedVoices.length > 0) {
-    u.voice = loadedVoices.find(v => !v.name.toLowerCase().includes("female")) || loadedVoices[0];
-  }
+const speak = (text) => {
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = 1.1;
   speechSynthesis.cancel();
-  setTimeout(() => {
-    speechSynthesis.speak(u);
-  }, 100);
-}
+  speechSynthesis.speak(utterance);
+};
 
 async function playSound(audio) {
   audio.currentTime = 0;
   try {
     await audio.play();
-  } catch(e) {
-    // Ignore playback errors silently
-  }
+  } catch (e) {}
 }
 
-async function startDrill(){
-  stopped=false; currentSet=1; moveCount=0;
-  totalSets=parseInt(document.getElementById("setsInput").value);
-  movesPerSet=parseInt(document.getElementById("movesInput").value);
-  secondsPerMove=parseInt(document.getElementById("secondsInput").value);
-  breakPerMove=parseInt(document.getElementById("moveBreakInput").value);
-  breakPerSet=parseInt(document.getElementById("setBreakInput").value);
-  motivationOn=motivationCheckbox.checked;
+function stopDrill() {
+  stopped = true;
+  clearTimeout(interval);
+  clearInterval(countdownInterval);
+  directionEl.textContent = "Drill Stopped.";
+  imageEl.src = "";
+  countdownEl.textContent = "";
+  speechSynthesis.cancel();
+}
 
-  // Ensure voices are loaded after user interaction
-  speechSynthesis.getVoices();
-
+async function startDrill() {
+  stopped = false;
+  currentSet = 1;
+  moveCount = 0;
+  totalSets = parseInt(document.getElementById("setsInput").value);
+  movesPerSet = parseInt(document.getElementById("movesInput").value);
+  secondsPerMove = parseInt(document.getElementById("secondsInput").value);
+  breakPerMove = parseInt(document.getElementById("moveBreakInput").value);
+  breakPerSet = parseInt(document.getElementById("setBreakInput").value);
+  motivationOn = motivationCheckbox.checked;
   runMove();
 }
 
-function stopDrill(){
-  stopped=true;
-  clearTimeout(interval); clearInterval(countdownInterval);
-  directionEl.textContent="Drill Stopped."; imageEl.src="";
-  countdownEl.textContent=""; speechSynthesis.cancel();
-}
-
-async function runMove(){
-  if(stopped) return;
-  if(moveCount>=movesPerSet){
-    if(currentSet>=totalSets){
-      directionEl.textContent="Drill Complete!"; imageEl.src=""; countdownEl.textContent="";
+async function runMove() {
+  if (stopped) return;
+  if (moveCount >= movesPerSet) {
+    if (currentSet >= totalSets) {
+      directionEl.textContent = "Drill Complete!";
+      imageEl.src = "";
+      countdownEl.textContent = "";
       return;
     }
     runSetBreak();
@@ -124,49 +113,58 @@ async function runMove(){
   }
 
   await playSound(startSound);
-  if(stopped) return;
+  if (stopped) return;
 
-  const move=directions[Math.floor(Math.random()*directions.length)];
-  directionEl.textContent=move.name;
-  imageEl.src=move.img;
+  const move = directions[Math.floor(Math.random() * directions.length)];
+  directionEl.textContent = move.name;
+  imageEl.src = move.img;
   speak(move.name);
   moveCount++;
 
-  interval=setTimeout(async ()=>{
-    if(stopped) return;
-    directionEl.textContent="";
-    imageEl.src="";
+  interval = setTimeout(async () => {
+    if (stopped) return;
+    directionEl.textContent = "";
+    imageEl.src = "";
     await playSound(breakSound);
     setTimeout(() => {
-      if(!stopped) runMove();
-    }, breakPerMove*1000);
-  }, secondsPerMove*1000);
+      if (!stopped) runMove();
+    }, breakPerMove * 1000);
+  }, secondsPerMove * 1000);
 }
 
-function runSetBreak(){
-  currentSet++; moveCount=0;
-  directionEl.textContent="Break between sets"; imageEl.src="";
+function runSetBreak() {
+  currentSet++;
+  moveCount = 0;
+  directionEl.textContent = "Break between sets";
+  imageEl.src = "";
   let countdown = breakPerSet;
   countdownEl.textContent = countdown;
 
-  countdownInterval = setInterval(async ()=>{
-    if(stopped){clearInterval(countdownInterval);return;}
+  countdownInterval = setInterval(async () => {
+    if (stopped) {
+      clearInterval(countdownInterval);
+      return;
+    }
     countdown--;
-    if(countdown > 0){
+
+    if (countdown > 0) {
       countdownEl.textContent = countdown;
+      // Only beep if not last second
       await playSound(startSound);
     } else {
       clearInterval(countdownInterval);
       countdownEl.textContent = "";
-      if(motivationOn){
-        const msg=motivationalLines[Math.floor(Math.random()*motivationalLines.length)];
+      if (motivationOn) {
+        const msg = motivationalLines[Math.floor(Math.random() * motivationalLines.length)];
         speak(msg);
-        setTimeout(()=>{ if(!stopped) runMove(); }, 3000);
+        setTimeout(() => {
+          if (!stopped) runMove();
+        }, 3000);
       } else {
         runMove();
       }
     }
-  },1000);
+  }, 1000);
 }
 </script>
 </body>
