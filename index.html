@@ -121,6 +121,15 @@
     const directionText = document.getElementById("direction");
     const imageElem = document.getElementById("image");
 
+    function speakDirection(text) {
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.5;
+        speechSynthesis.cancel();
+        speechSynthesis.speak(utterance);
+      }
+    }
+
     function startDrill() {
       stopDrill();
 
@@ -153,17 +162,18 @@
         return;
       }
 
-      // Show direction & image, hide break mark
+      // Show direction and image, hide break mark
       const random = directions[Math.floor(Math.random() * directions.length)];
       directionText.textContent = random.name;
       imageElem.src = random.img;
       breakMark.style.display = "none";
 
+      speakDirection(random.name);
       startSound.play();
       moveCount++;
 
       interval = setTimeout(() => {
-        // Clear direction & image, show break mark
+        // Hide direction and image, show break mark
         directionText.textContent = "";
         imageElem.src = "";
         breakMark.style.display = "block";
@@ -182,6 +192,7 @@
       directionText.textContent = "Drill Stopped.";
       imageElem.src = "";
       breakMark.style.display = "none";
+      speechSynthesis.cancel();
     }
   </script>
 </body>
