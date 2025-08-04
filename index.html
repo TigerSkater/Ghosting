@@ -221,35 +221,41 @@
     }
 
     function runMove() {
-      if (stopped) return;
-      if (moveCount >= movesPerSet) {
-        if (currentSet >= totalSets) {
-          directionEl.textContent = "Drill Complete!";
-          imageEl.src = "";
-          countdownEl.textContent = "";
-          return;
-        }
-        runSetBreak(); return;
-      }
-
-      const move = directions[Math.floor(Math.random() * directions.length)];
-      directionEl.textContent = move.name;
-      imageEl.src = move.img;
+  if (stopped) return;
+  if (moveCount >= movesPerSet) {
+    if (currentSet >= totalSets) {
+      directionEl.style.display = "none";
+      imageEl.style.display = "none";
+      directionEl.textContent = "";
+      imageEl.src = "";
       countdownEl.textContent = "";
-      playBeep(); speak(move.name);
-      moveCount++;
-
-      interval = setTimeout(() => {
-        if (stopped) return;
-        directionEl.textContent = "";
-        imageEl.src = "";
-        playBonk();
-        setTimeout(() => {
-          if (!stopped) runMove();
-        }, breakPerMove * 1000);
-      }, secondsPerMove * 1000);
+      return;
     }
+    runSetBreak(); return;
+  }
 
+  const move = directions[Math.floor(Math.random() * directions.length)];
+  directionEl.style.display = "block";  // show
+  imageEl.style.display = "block";      // show
+  directionEl.textContent = move.name;
+  imageEl.src = move.img;
+  countdownEl.textContent = "";
+  playBeep(); speak(move.name);
+  moveCount++;
+
+  interval = setTimeout(() => {
+    if (stopped) return;
+    // Hide elements during break so no box or empty space remains
+    directionEl.style.display = "none";  
+    imageEl.style.display = "none";
+
+    playBonk(); // bonk after image disappears
+
+    setTimeout(() => {
+      if (!stopped) runMove();
+    }, breakPerMove * 1000);
+  }, secondsPerMove * 1000);
+}
     function runSetBreak() {
       currentSet++;
       moveCount = 0;
