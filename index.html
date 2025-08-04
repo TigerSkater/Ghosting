@@ -30,14 +30,18 @@
   <div id="countdown"></div>
   <img id="image" src="" alt="Direction Arrow"/>
 
+  <!-- Original sounds as audio elements -->
+  <audio id="startSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+  <audio id="breakSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
+
 <script>
 const directions = [
-  {name:"Front Left",img:"https://cdn11.bigcommerce.com/s-3pbmh1zmv/images/..."},
-  {name:"Front Right",img:"..."},
-  {name:"Side Left",img:"..."},
-  {name:"Side Right",img:"..."},
-  {name:"Back Left",img:"..."},
-  {name:"Back Right",img:"..."}
+  {name:"Front Left",img:"https://cdn11.bigcommerce.com/s-3pbmh1zmv/images/stencil/1280x1280/products/3915/4456/PFFS7-2424012__33531.1739389253.png?c=1"},
+  {name:"Front Right",img:"https://cdn11.bigcommerce.com/s-3pbmh1zmv/images/stencil/1280x1280/products/4681/5420/PFFS7-2424011__20606.1739389988.png?c=1"},
+  {name:"Side Left",img:"https://upload.wikimedia.org/wikipedia/commons/d/d7/Eo_circle_green_arrow-left.svg"},
+  {name:"Side Right",img:"https://upload.wikimedia.org/wikipedia/commons/b/bd/Eo_circle_blue_arrow-right.svg"},
+  {name:"Back Left",img:"https://www.roadtrafficsigns.com/img/lg/X/Left-Diagonal-Arrow-Sign-X-W16-7pL.gif"},
+  {name:"Back Right",img:"https://signsolutionsusa.com/wp-content/uploads/sites/6/2024/07/W16-7pR_Fluor-Yellow-Green.webp"}
 ];
 const motivationalLines = [
   "Your break is over. Cry later. Move now.",
@@ -53,7 +57,9 @@ let currentSet=0, moveCount=0, totalSets=0, movesPerSet=0,
 const directionEl=document.getElementById("direction"),
       countdownEl=document.getElementById("countdown"),
       imageEl=document.getElementById("image"),
-      motivationCheckbox=document.getElementById("motivationCheckbox");
+      motivationCheckbox=document.getElementById("motivationCheckbox"),
+      startSound=document.getElementById("startSound"),
+      breakSound=document.getElementById("breakSound");
 
 function speak(text){
   const u = new SpeechSynthesisUtterance(text);
@@ -62,8 +68,14 @@ function speak(text){
   speechSynthesis.speak(u);
 }
 
-function playBeep(){ new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg").play(); }
-function playBonk(){ new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg").play(); }
+function playBeep() {
+  startSound.currentTime = 0;
+  startSound.play();
+}
+function playBonk() {
+  breakSound.currentTime = 0;
+  breakSound.play();
+}
 
 function startDrill(){
   stopped=false; currentSet=1; moveCount=0;
@@ -90,18 +102,20 @@ function runMove(){
       directionEl.textContent="Drill Complete!"; imageEl.src=""; countdownEl.textContent="";
       return;
     }
-    runSetBreak(); return;
+    runSetBreak();
+    return;
   }
   const move=directions[Math.floor(Math.random()*directions.length)];
   directionEl.textContent=move.name;
   imageEl.src=move.img;
-  countdownEl.textContent="";
-  playBeep(); speak(move.name);
+  playBeep(); // beep before move
+  speak(move.name);
   moveCount++;
   interval=setTimeout(()=>{
     if(stopped) return;
-    directionEl.textContent=""; imageEl.src="";
-    playBonk(); // <-- bonk sound after image
+    directionEl.textContent="";
+    imageEl.src="";
+    playBonk(); // bonk after move
     setTimeout(() => {
       if(stopped) return;
       runMove();
@@ -118,7 +132,6 @@ function runSetBreak(){
     if(stopped){clearInterval(countdownInterval);return;}
     countdown--;
     if(countdown > 0){
-      playBeep();
       countdownEl.textContent = countdown;
     } else {
       clearInterval(countdownInterval);
@@ -128,7 +141,7 @@ function runSetBreak(){
         speak(msg);
         setTimeout(()=>{ if(!stopped) runMove(); },3000);
       } else {
-        playBeep(); runMove();
+        runMove();
       }
     }
   },1000);
