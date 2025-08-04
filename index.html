@@ -9,7 +9,7 @@
       font-family: Arial, sans-serif;
       text-align: center;
       padding: 20px;
-      background: #f3e8ff;
+      background: #f3e8ff; /* lighter purple */
     }
 
     h1 {
@@ -116,7 +116,6 @@
 
     const speak = (text) => {
       const utterance = new SpeechSynthesisUtterance(text);
-      // Use default voice — no voice selection at all
       speechSynthesis.cancel();
       speechSynthesis.speak(utterance);
     };
