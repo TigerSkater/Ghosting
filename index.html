@@ -28,6 +28,13 @@
       margin: 0 auto 1em;
     }
 
+    #breakMark {
+      font-size: 6em;
+      color: green;
+      margin: 1em auto;
+      display: none;
+    }
+
     button {
       font-size: 1.2em;
       padding: 10px 20px;
@@ -60,6 +67,9 @@
     <label>Seconds per move:</label>
     <input type="number" id="secondsInput" min="1" value="3" />
 
+    <label>Seconds break time:</label>
+    <input type="number" id="breakInput" min="0" value="1" />
+
     <br><br>
     <button onclick="startDrill()">Start Drill</button>
     <button onclick="stopDrill()">Stop Drill</button>
@@ -67,6 +77,7 @@
 
   <div id="direction"></div>
   <img id="image" src="" alt="Direction Arrow" />
+  <div id="breakMark">✅</div>
 
   <audio id="startSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
   <audio id="breakSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
@@ -106,6 +117,9 @@
 
     const startSound = document.getElementById("startSound");
     const breakSound = document.getElementById("breakSound");
+    const breakMark = document.getElementById("breakMark");
+    const directionText = document.getElementById("direction");
+    const imageElem = document.getElementById("image");
 
     function startDrill() {
       stopDrill();
@@ -113,49 +127,61 @@
       const sets = parseInt(document.getElementById("setsInput").value);
       const movesPerSet = parseInt(document.getElementById("movesInput").value);
       const seconds = parseInt(document.getElementById("secondsInput").value);
+      const breakTime = parseInt(document.getElementById("breakInput").value);
 
-      if (isNaN(sets) || isNaN(movesPerSet) || isNaN(seconds) || sets <= 0 || seconds <= 0 || movesPerSet <= 0) {
-        alert("Please enter valid positive numbers.");
+      if (
+        isNaN(sets) || sets <= 0 ||
+        isNaN(movesPerSet) || movesPerSet <= 0 ||
+        isNaN(seconds) || seconds <= 0 ||
+        isNaN(breakTime) || breakTime < 0
+      ) {
+        alert("Please enter valid positive numbers (break time can be zero).");
         return;
       }
 
       moveCount = 0;
       totalMoves = sets * movesPerSet;
 
-      runMove(seconds);
+      runMove(seconds, breakTime);
     }
 
-    function runMove(seconds) {
+    function runMove(seconds, breakTime) {
       if (moveCount >= totalMoves) {
-        document.getElementById("direction").textContent = "Drill Complete!";
-        document.getElementById("image").src = "";
+        directionText.textContent = "Drill Complete!";
+        imageElem.src = "";
+        breakMark.style.display = "none";
         return;
       }
 
+      // Show direction & image, hide break mark
       const random = directions[Math.floor(Math.random() * directions.length)];
-      document.getElementById("direction").textContent = random.name;
-      document.getElementById("image").src = random.img;
+      directionText.textContent = random.name;
+      imageElem.src = random.img;
+      breakMark.style.display = "none";
 
       startSound.play();
       moveCount++;
 
       interval = setTimeout(() => {
-        document.getElementById("direction").textContent = "";
-        document.getElementById("image").src = "";
+        // Clear direction & image, show break mark
+        directionText.textContent = "";
+        imageElem.src = "";
+        breakMark.style.display = "block";
 
         breakSound.play();
 
         breakInterval = setTimeout(() => {
-          runMove(seconds);
-        }, 1000);
+          runMove(seconds, breakTime);
+        }, breakTime * 1000);
       }, seconds * 1000);
     }
 
     function stopDrill() {
       clearTimeout(interval);
       clearTimeout(breakInterval);
-      document.getElementById("direction").textContent = "Drill Stopped.";
-      document.getElementById("image").src = "";
+      directionText.textContent = "Drill Stopped.";
+      imageElem.src = "";
+      breakMark.style.display = "none";
     }
   </script>
 </body>
