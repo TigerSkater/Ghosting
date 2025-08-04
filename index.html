@@ -9,7 +9,7 @@
       font-family: Arial, sans-serif;
       text-align: center;
       padding: 20px;
-      background: #e6e0f8; /* Light purple */
+      background: #e6e0f8;
     }
 
     h1 {
@@ -54,6 +54,9 @@
     <label>Sets:</label>
     <input type="number" id="setsInput" min="1" value="3" />
 
+    <label>Moves per set:</label>
+    <input type="number" id="movesInput" min="1" value="15" />
+
     <label>Seconds per move:</label>
     <input type="number" id="secondsInput" min="1" value="3" />
 
@@ -64,6 +67,9 @@
 
   <div id="direction"></div>
   <img id="image" src="" alt="Direction Arrow" />
+
+  <audio id="startSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+  <audio id="breakSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
 
   <script>
     const directions = [
@@ -98,19 +104,23 @@
     let interval;
     let breakInterval;
 
+    const startSound = document.getElementById("startSound");
+    const breakSound = document.getElementById("breakSound");
+
     function startDrill() {
-      stopDrill(); // Clear any previous interval
+      stopDrill();
 
       const sets = parseInt(document.getElementById("setsInput").value);
+      const movesPerSet = parseInt(document.getElementById("movesInput").value);
       const seconds = parseInt(document.getElementById("secondsInput").value);
 
-      if (isNaN(sets) || isNaN(seconds) || sets <= 0 || seconds <= 0) {
+      if (isNaN(sets) || isNaN(movesPerSet) || isNaN(seconds) || sets <= 0 || seconds <= 0 || movesPerSet <= 0) {
         alert("Please enter valid positive numbers.");
         return;
       }
 
       moveCount = 0;
-      totalMoves = sets * 15;
+      totalMoves = sets * movesPerSet;
 
       runMove(seconds);
     }
@@ -126,16 +136,18 @@
       document.getElementById("direction").textContent = random.name;
       document.getElementById("image").src = random.img;
 
+      startSound.play();
       moveCount++;
 
-      // Show move for X seconds, then clear for 1 sec
       interval = setTimeout(() => {
         document.getElementById("direction").textContent = "";
         document.getElementById("image").src = "";
 
+        breakSound.play();
+
         breakInterval = setTimeout(() => {
           runMove(seconds);
-        }, 1000); // 1-second break
+        }, 1000);
       }, seconds * 1000);
     }
 
