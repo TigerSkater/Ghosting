@@ -108,6 +108,7 @@
     let breakPerMove = 0;
     let breakPerSet = 0;
     let interval;
+    let countdownInterval;
     let stopped = false;
 
     const directionEl = document.getElementById("direction");
@@ -182,7 +183,6 @@
       }, secondsPerMove * 1000);
     }
 
-    let countdownInterval;
     function runSetBreak() {
       currentSet++;
       moveCount = 0;
@@ -205,12 +205,20 @@
           playBeep();
           countdownEl.textContent = countdown;
         } else {
-          // Last second: no beep, say one random motivational line
-          countdownEl.textContent = "";
-          const randomMotivation = motivationalLines[Math.floor(Math.random() * motivationalLines.length)];
-          speak(randomMotivation);
+          // Last second reached
           clearInterval(countdownInterval);
-          runMove();
+          countdownEl.textContent = "";
+
+          // Small delay to ensure interval cleared before speaking
+          setTimeout(() => {
+            const randomMotivation = motivationalLines[Math.floor(Math.random() * motivationalLines.length)];
+            speak(randomMotivation);
+
+            // After motivational speech, start next set moves with a slight delay to not cut speech
+            setTimeout(() => {
+              if (!stopped) runMove();
+            }, 3000); // 3 seconds pause for speech to be heard
+          }, 200);
         }
       }, 1000);
     }
