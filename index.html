@@ -157,6 +157,9 @@ function runSetBreak() {
   let countdown = breakPerSet;
   countdownEl.textContent = countdown;
 
+  // Beep immediately for the first number
+  playBeep();
+
   countdownInterval = setInterval(() => {
     if (stopped) {
       clearInterval(countdownInterval);
@@ -172,9 +175,7 @@ function runSetBreak() {
       if (motivationOn) {
         const msg = motivationalLines[Math.floor(Math.random() * motivationalLines.length)];
         speak(msg);
-        setTimeout(() => {
-          if (!stopped) runMove();
-        }, 3000);
+        setTimeout(() => { if (!stopped) runMove(); }, 3000);
       } else {
         playBeep();
         runMove();
