@@ -42,6 +42,11 @@
       display: none;
     }
 
+    #setBreakCountdown img {
+      width: 200px;
+      height: auto;
+    }
+
     button {
       font-size: 1.2em;
       padding: 10px 20px;
@@ -159,7 +164,6 @@
 
     function startDrill() {
       speechSynthesis.cancel();
-
       stopDrill();
 
       totalSets = parseInt(document.getElementById("setsInput").value);
@@ -239,7 +243,7 @@
           return;
         }
 
-        setBreakCountdown.innerHTML = `<img src="${numberImages[counter] || ''}" alt="${counter}" width="120" />`;
+        setBreakCountdown.innerHTML = `<img src="${numberImages[counter] || ''}" alt="${counter}" />`;
         counter--;
         setBreakInterval = setTimeout(countdown, 1000);
       }
