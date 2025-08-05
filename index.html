@@ -253,13 +253,18 @@
         drillView = document.getElementById("drillView"),
         configContainer = document.getElementById("configContainer");
 
-  function toggleDirection(key) {
+   function toggleDirection(key) {
     selectedDirections[key] = !selectedDirections[key];
     const btn = document.querySelector(`.direction-btn[data-key="${key}"]`);
     const img = btn.querySelector("img");
+    
+    // Convert key to match your filename format (front-left becomes ffront_left)
+    const fadedKey = 'f' + key.replace(/-/g, '_');
+    
     img.src = selectedDirections[key]
       ? `images/${key}.png`
-      : `images/f${key}.png`;  // Changed to use hyphens in faded filenames
+      : `images/${fadedKey}.png`;
+      
     clickSound.currentTime = 0;
     clickSound.play();
   }
