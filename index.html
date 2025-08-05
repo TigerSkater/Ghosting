@@ -160,10 +160,11 @@
     ];
 
     const motivationalLines = [
-      "Your break is over. Cry later. Move now.",
-      "The floor misses you. Go make it sweat!",
-      "Congratulations, you are now… still not done!",
-      "Your coach called. They said move it!"
+      { text: "Your break is over. Cry later. Move now." },
+      { text: "The floor misses you. Go make it sweat!" },
+      { text: "Congratulations, you are now… still not done!" },
+      { text: "Your coach called. They said move it!" },
+      { audio: "audio/run_faster.mp3", label: "Sofia test" }
     ];
 
     let currentSet = 0, moveCount = 0, totalSets = 0, movesPerSet = 0,
@@ -278,9 +279,15 @@
           clearInterval(countdownInterval);
           countdownEl.textContent = "";
           if (motivationOn) {
-            const msg = motivationalLines[Math.floor(Math.random() * motivationalLines.length)];
-            speak(msg);
-            setTimeout(() => { if (!stopped) runMove(); }, 3000);
+            const msgObj = motivationalLines[Math.floor(Math.random() * motivationalLines.length)];
+            if (msgObj.audio) {
+              const audio = new Audio(msgObj.audio);
+              audio.play().catch(e => console.error("Audio play failed:", e));
+              setTimeout(() => { if (!stopped) runMove(); }, 3000);
+            } else {
+              speak(msgObj.text);
+              setTimeout(() => { if (!stopped) runMove(); }, 3000);
+            }
           } else {
             playBeep();
             runMove();
