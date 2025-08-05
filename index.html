@@ -301,9 +301,9 @@
     return;
   }
 
-  // Check if any required input is blank (""), but allow "0"
+  // Input validation
   const inputs = [
-    { id: "setsInput", label: "Number of Sets" },
+    { id: "setsInput", label: "Number of Sets", mustBePositive: true },
     { id: "movesInput", label: "Moves per Set" },
     { id: "secondsInput", label: "Reaction Time (s)" },
     { id: "moveBreakInput", label: "Reposition Time (s)" },
@@ -312,9 +312,18 @@
 
   for (const input of inputs) {
     const el = document.getElementById(input.id);
-    if (el.value.trim() === "") {
+    const val = el.value.trim();
+
+    if (val === "") {
       errorEl.textContent = `⚠️ Please input a value for ${input.label} (e.g. 0)`;
-      el.focus();  // Optional: highlight the field that needs attention
+      el.focus();
+      return;
+    }
+
+    const num = parseInt(val);
+    if (input.mustBePositive && num < 1) {
+      errorEl.textContent = `⚠️ ${input.label} must be at least 1`;
+      el.focus();
       return;
     }
   }
