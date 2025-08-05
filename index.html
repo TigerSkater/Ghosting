@@ -199,66 +199,62 @@
   </div>
 
   <script>
-    const clickSound = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
-    const allDirections = [
-      { name: "Front Left",  key: "front-left" },
-      { name: "Front Right", key: "front-right" },
-      { name: "Side Left",   key: "side-left" },
-      { name: "Side Right",  key: "side-right" },
-      { name: "Back Left",   key: "back-left" },
-      { name: "Back Right",  key: "back-right" }
-    ];
+  const clickSound = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
+  const allDirections = [
+    { name: "Front Left",  key: "front-left" },
+    { name: "Front Right", key: "front-right" },
+    { name: "Side Left",   key: "side-left" },
+    { name: "Side Right",  key: "side-right" },
+    { name: "Back Left",   key: "back-left" },
+    { name: "Back Right",  key: "back-right" }
+  ];
 
-    let selectedDirections = {};
-    const directionButtons = document.getElementById("directionButtons");
+  let selectedDirections = {};
+  const directionButtons = document.getElementById("directionButtons");
 
-    allDirections.forEach(dir => {
-      selectedDirections[dir.key] = true;
-      const btn = document.createElement("button");
-      btn.className = "direction-btn";
-      const img = document.createElement("img");
-      img.src = `images/${dir.key}.png`;
-      img.alt = dir.name;
-      btn.appendChild(img);
-      btn.onclick = () => {
-        selectedDirections[dir.key] = !selectedDirections[dir.key];
-        img.src = selectedDirections[dir.key] ? `images/${dir.key}.png` : `images/f${dir.key.replace(/-/g, "_")}.png`;
-      };
-      directionButtons.appendChild(btn);
-    });
+  allDirections.forEach(dir => {
+    selectedDirections[dir.key] = true;
+    const btn = document.createElement("button");
+    btn.className = "direction-btn";
+    btn.setAttribute("data-key", dir.key);
+    const img = document.createElement("img");
+    img.src = `images/${dir.key}.png`;
+    img.alt = dir.name;
+    btn.appendChild(img);
+    btn.onclick = () => toggleDirection(dir.key);
+    directionButtons.appendChild(btn);
+  });
 
-    const motivationalLines = [
-      { text: "Your break is over. Cry later. Move now." },
-      { text: "The floor misses you. Go make it sweat!" },
-      { text: "Congratulations, you are now… still not done!" },
-      { text: "Your coach called. They said move!" },
-      { audio: "audio/run-faster.mp3", label: "Run Faster, Sofia Test" }
-    ];
+  const motivationMessages = [
+    "Your break is over. Cry later. Move now.",
+    "The floor misses you. Go make it sweat!",
+    "Congratulations, you are now… still not done!",
+    "Your coach called. They said move!",
+    "Run Faster, Sofia Test"
+  ];
 
-    let currentSet = 0, moveCount = 0, totalSets = 0, movesPerSet = 0,
-        secondsPerMove = 0, breakPerMove = 0, breakPerSet = 0,
-        interval, countdownInterval, stopped = false, motivationOn = true;
+  let currentSet = 0, moveCount = 0, totalSets = 0, movesPerSet = 0,
+      secondsPerMove = 0, breakPerMove = 0, breakPerSet = 0,
+      interval, countdownInterval, stopped = false, motivationOn = true;
 
-    const directionEl = document.getElementById("direction"),
-          countdownEl = document.getElementById("countdown"),
-          imageEl = document.getElementById("image"),
-          motivationCheckbox = document.getElementById("motivationCheckbox"),
-          drillView = document.getElementById("drillView"),
-          configContainer = document.getElementById("configContainer");
+  const directionEl = document.getElementById("direction"),
+        countdownEl = document.getElementById("countdown"),
+        imageEl = document.getElementById("image"),
+        motivationCheckbox = document.getElementById("motivationCheckbox"),
+        drillView = document.getElementById("drillView"),
+        configContainer = document.getElementById("configContainer");
 
-    // ✅ Consolidated speak()
   function toggleDirection(key) {
-  selectedDirections[key] = !selectedDirections[key];
-  const btn = document.querySelector(`.direction-btn[data-key="${key}"]`);
-  const img = btn.querySelector("img");
-  img.src = selectedDirections[key]
-    ? `images/${key}.png`
-    : `images/f${key}.png`;
-
-  clickSound.currentTime = 0;
-  clickSound.play();
+    selectedDirections[key] = !selectedDirections[key];
+    const btn = document.querySelector(`.direction-btn[data-key="${key}"]`);
+    const img = btn.querySelector("img");
+    img.src = selectedDirections[key]
+      ? `images/${key}.png`
+      : `images/f${key}.png`;
+    clickSound.currentTime = 0;
+    clickSound.play();
   }
-    
+
   function speak(text) {
     const u = new SpeechSynthesisUtterance(text);
     u.rate = 1.3;
@@ -276,103 +272,98 @@
   }
 
   function playMotivationMessage(callback) {
-  if (!motivationOn) {
-    callback?.();
-    return;
-  }
-
-  const message = pickRandom(motivationMessages); // just a string
-  const audioPath = `audio/${message}.mp3`;
-  const audio = new Audio(audioPath);
-
-  let played = false;
-
-  audio.addEventListener("canplaythrough", () => {
-    audio.play();
-    played = true;
-  });
-
-  audio.addEventListener("ended", () => {
-    callback?.(); // continue after audio finishes
-  });
-
-  audio.addEventListener("error", () => {
-    if (!played) {
-      speak(message);
-      setTimeout(() => callback?.(), 2500); // estimate duration of TTS
-    }
-  });
-
-  // Backup: in case canplaythrough or error don’t fire
-  setTimeout(() => {
-    if (!played) {
-      speak(message);
-      setTimeout(() => callback?.(), 2500);
-    }
-  }, 500);
-}
-
- function startDrill() {
-  const errorEl = document.getElementById("error-message");
-
-  // Check if at least one direction is selected
-  const selected = Object.values(selectedDirections).some(val => val);
-  if (!selected) {
-    errorEl.textContent = "⚠️ Please select at least one direction!";
-    return;
-  }
-
-  // Input validation
-  const inputs = [
-    { id: "setsInput", label: "Number of Sets", min: 1 },
-    { id: "movesInput", label: "Moves per Set", min: 1 },
-    { id: "secondsInput", label: "Reaction Time (s)", min: 0 },
-    { id: "moveBreakInput", label: "Reposition Time (s)", min: 0 },
-    { id: "setBreakInput", label: "Rest Between Sets (s)", min: 0 }
-  ];
-
-  for (const input of inputs) {
-    const el = document.getElementById(input.id);
-    const val = el.value.trim();
-
-    if (val === "") {
-      errorEl.textContent = `⚠️ Please input a value for ${input.label} (e.g. 1)`;
-      el.focus();
+    if (!motivationOn) {
+      callback?.();
       return;
     }
 
-    const num = parseInt(val, 10);
-    if (isNaN(num) || num < input.min) {
-      const requirement = input.min === 0 ? "0 or greater" : `at least ${input.min}`;
-      errorEl.textContent = `⚠️ ${input.label} must be ${requirement}`;
-      el.focus();
-      return;
-    }
+    const message = pickRandom(motivationMessages); // just a string
+    const audioPath = `audio/${message}.mp3`;
+    const audio = new Audio(audioPath);
+
+    let played = false;
+
+    audio.addEventListener("canplaythrough", () => {
+      audio.play();
+      played = true;
+    });
+
+    audio.addEventListener("ended", () => {
+      callback?.(); // continue after audio finishes
+    });
+
+    audio.addEventListener("error", () => {
+      if (!played) {
+        speak(message);
+        setTimeout(() => callback?.(), 2500); // estimate duration of TTS
+      }
+    });
+
+    setTimeout(() => {
+      if (!played) {
+        speak(message);
+        setTimeout(() => callback?.(), 2500);
+      }
+    }, 500);
   }
 
-  // All clear – reset error
-  errorEl.textContent = "";
+  function startDrill() {
+    const errorEl = document.getElementById("error-message");
 
-  // Initialize drill
-  stopped = false;
-  currentSet = 1;
-  moveCount = 0;
+    const selected = Object.values(selectedDirections).some(val => val);
+    if (!selected) {
+      errorEl.textContent = "⚠️ Please select at least one direction!";
+      return;
+    }
 
-  totalSets = parseInt(document.getElementById("setsInput").value);
-  movesPerSet = parseInt(document.getElementById("movesInput").value);
-  secondsPerMove = parseInt(document.getElementById("secondsInput").value);
-  breakPerMove = parseInt(document.getElementById("moveBreakInput").value);
-  breakPerSet = parseInt(document.getElementById("setBreakInput").value);
-  motivationOn = motivationCheckbox.checked;
+    const inputs = [
+      { id: "setsInput", label: "Number of Sets", min: 1 },
+      { id: "movesInput", label: "Moves per Set", min: 1 },
+      { id: "secondsInput", label: "Reaction Time (s)", min: 0 },
+      { id: "moveBreakInput", label: "Reposition Time (s)", min: 0 },
+      { id: "setBreakInput", label: "Rest Between Sets (s)", min: 0 }
+    ];
 
-  configContainer.classList.add("hide");
-  drillView.classList.add("active");
+    for (const input of inputs) {
+      const el = document.getElementById(input.id);
+      const val = el.value.trim();
 
-  directionEl.textContent = "";
-  imageEl.src = "";
+      if (val === "") {
+        errorEl.textContent = `⚠️ Please input a value for ${input.label} (e.g. 1)`;
+        el.focus();
+        return;
+      }
 
-  runMove();
-}
+      const num = parseInt(val, 10);
+      if (isNaN(num) || num < input.min) {
+        const requirement = input.min === 0 ? "0 or greater" : `at least ${input.min}`;
+        errorEl.textContent = `⚠️ ${input.label} must be ${requirement}`;
+        el.focus();
+        return;
+      }
+    }
+
+    errorEl.textContent = "";
+
+    stopped = false;
+    currentSet = 1;
+    moveCount = 0;
+
+    totalSets = parseInt(document.getElementById("setsInput").value);
+    movesPerSet = parseInt(document.getElementById("movesInput").value);
+    secondsPerMove = parseInt(document.getElementById("secondsInput").value);
+    breakPerMove = parseInt(document.getElementById("moveBreakInput").value);
+    breakPerSet = parseInt(document.getElementById("setBreakInput").value);
+    motivationOn = motivationCheckbox.checked;
+
+    configContainer.classList.add("hide");
+    drillView.classList.add("active");
+
+    directionEl.textContent = "";
+    imageEl.src = "";
+
+    runMove();
+  }
 
   function stopDrill() {
     stopped = true;
@@ -384,9 +375,9 @@
     speechSynthesis.cancel();
     drillView.classList.remove("active");
     configContainer.classList.remove("hide");
-}
+  }
 
-    function runMove() {
+  function runMove() {
     if (stopped) return;
     if (moveCount >= movesPerSet) {
       if (currentSet >= totalSets) {
@@ -397,7 +388,8 @@
         countdownEl.textContent = "";
         return;
       }
-      runSetBreak(); return;
+      runSetBreak();
+      return;
     }
 
     const filteredDirections = allDirections.filter(d => selectedDirections[d.key]);
@@ -409,7 +401,7 @@
     imageEl.src = `images/${move.key}.png`;
     countdownEl.textContent = "";
     playBeep();
-    speak(move.name); // ✅ Direction speech
+    speak(move.name);
 
     moveCount++;
 
@@ -439,22 +431,21 @@
         return;
       }
       countdown--;
-      if (countdown > 0) {
-        countdownEl.textContent = countdown;
-        playBeep();
-      } else {
+      countdownEl.textContent = countdown;
+      playBeep();
+
+      if (countdown < 1) {
         clearInterval(countdownInterval);
         countdownEl.textContent = "";
-
-        if (motivationOn) {
-          playMotivationalMessage(() => {
-            if (!stopped) runMove();
-          });
-        } else {
-          runMove();
-        }
+        playMotivationMessage(() => {
+          if (!stopped) runMove();
+        });
       }
     }, 1000);
+  }
+
+  function pickRandom(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
   }
 </script>
 </body>
