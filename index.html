@@ -223,28 +223,77 @@
     clickSound.play();
   }
 
-  function speak(text) {
-    if (!('speechSynthesis' in window)) return;
-    speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1.3;
-    utterance.volume = 1;
-    utterance.onerror = (e) => console.error('Speech error:', e);
-    speechSynthesis.speak(utterance);
+    function speak(text) {
+    if (!('speechSynthesis' in window)) {
+      console.warn('Speech synthesis not supported');
+      return;
+    }
+    
+    // Cancel any ongoing speech immediately
+    window.speechSynthesis.cancel();
+    
+    return new Promise(resolve => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.3; 
+      utterance.volume = 1;
+      utterance.pitch = 1;
+      
+      utterance.onend = function() {
+        console.log('Finished speaking:', text);
+        resolve();
+      };
+      
+      utterance.onerror = function(event) {
+        console.error('Speech error:', event.error);
+        resolve();
+      };
+      
+      // Add slight delay to ensure clean speech start
+      setTimeout(() => {
+        window.speechSynthesis.speak(utterance);
+      }, 50);
+    });
   }
 
   function playMotivationMessage(callback) {
-    if (!motivationOn) return callback?.();
+    if (!motivationOn) {
+      callback?.();
+      return;
+    }
+
     const message = pickRandom(motivationalLines);
+    console.log('Playing motivation:', message);
     
+    const handleComplete = () => {
+      setTimeout(() => callback?.(), 500); // Brief pause after message
+    };
+
     if (message.audio) {
       const audio = new Audio(message.audio);
-      audio.play().catch(() => speak(message.label));
-      audio.onended = () => callback?.();
-      setTimeout(() => callback?.(), 3000);
+      audio.preload = 'auto';
+      
+      audio.oncanplaythrough = function() {
+        audio.play().catch(e => {
+          console.error('Audio play failed:', e);
+          speak(message.label).then(handleComplete);
+        });
+      };
+      
+      audio.onended = handleComplete;
+      audio.onerror = function() {
+        console.error('Audio error');
+        speak(message.label).then(handleComplete);
+      };
+      
+      // Fallback if audio doesn't start
+      setTimeout(() => {
+        if (audio.readyState < 3) { // 3 = HAVE_FUTURE_DATA
+          speak(message.label).then(handleComplete);
+        }
+      }, 500);
+      
     } else {
-      speak(message.text);
-      setTimeout(() => callback?.(), Math.max(2500, message.text.length * 150));
+      speak(message.text).then(handleComplete);
     }
   }
 
@@ -318,10 +367,9 @@
     configContainer.classList.remove("hide");
   }
 
-  function runMove() {
+  async function runMove() {
     if (stopped) return;
     
-    // Clear any previous timeouts
     clearTimeout(interval);
     clearTimeout(moveTimeout);
     
@@ -343,11 +391,11 @@
     directionEl.textContent = move.name;
     imageEl.src = `images/${move.key}.png`;
     countdownEl.textContent = "";
-    playBeep();
     
-    // Speak with proper cleanup
-    speechSynthesis.cancel();
-    setTimeout(() => speak(move.name), 100);
+    // Play beep and speak direction with proper timing
+    playBeep();
+    await new Promise(resolve => setTimeout(resolve, 150)); // Wait for beep to play
+    await speak(move.name); // Wait for speech to complete
     
     moveCount++;
 
