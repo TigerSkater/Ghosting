@@ -303,11 +303,11 @@
 
   // Input validation
   const inputs = [
-    { id: "setsInput", label: "Number of Sets", mustBePositive: true },
-    { id: "movesInput", label: "Moves per Set" },
-    { id: "secondsInput", label: "Reaction Time (s)" },
-    { id: "moveBreakInput", label: "Reposition Time (s)" },
-    { id: "setBreakInput", label: "Rest Between Sets (s)" }
+    { id: "setsInput", label: "Number of Sets", min: 1 },
+    { id: "movesInput", label: "Moves per Set", min: 1 },
+    { id: "secondsInput", label: "Reaction Time (s)", min: 0 },
+    { id: "moveBreakInput", label: "Reposition Time (s)", min: 0 },
+    { id: "setBreakInput", label: "Rest Between Sets (s)", min: 0 }
   ];
 
   for (const input of inputs) {
@@ -320,9 +320,10 @@
       return;
     }
 
-    const num = parseInt(val);
-    if (input.mustBePositive && num < 1) {
-      errorEl.textContent = `⚠️ ${input.label} must be at least 1`;
+    const num = parseInt(val, 10);
+    if (isNaN(num) || num < input.min) {
+      const requirement = input.min === 0 ? "0 or greater" : `at least ${input.min}`;
+      errorEl.textContent = `⚠️ ${input.label} must be ${requirement}`;
       el.focus();
       return;
     }
