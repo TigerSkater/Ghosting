@@ -291,7 +291,7 @@
     }
   }
 
-  function startDrill() {
+ function startDrill() {
   const errorEl = document.getElementById("error-message");
 
   // Check if at least one direction is selected
@@ -305,15 +305,16 @@
   const inputs = [
     { id: "setsInput", label: "Number of Sets" },
     { id: "movesInput", label: "Moves per Set" },
-    { id: "secondsInput", label: "Reaction Time" },
-    { id: "moveBreakInput", label: "Reposition Time" },
-    { id: "setBreakInput", label: "Rest Between Sets" }
+    { id: "secondsInput", label: "Reaction Time (s)" },
+    { id: "moveBreakInput", label: "Reposition Time (s)" },
+    { id: "setBreakInput", label: "Rest Between Sets (s)" }
   ];
 
   for (const input of inputs) {
-    const value = document.getElementById(input.id).value;
-    if (value === "") {
-      errorEl.textContent = `⚠️ Please fill in: ${input.label}`;
+    const el = document.getElementById(input.id);
+    if (el.value.trim() === "") {
+      errorEl.textContent = `⚠️ Please input a value for ${input.label} (e.g. 0)`;
+      el.focus();  // Optional: highlight the field that needs attention
       return;
     }
   }
