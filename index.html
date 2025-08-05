@@ -199,7 +199,6 @@
   </div>
 
   <script>
-
   const clickSound = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
   const allDirections = [
     { name: "Front Left",  key: "front-left" },
@@ -212,15 +211,7 @@
 
   let selectedDirections = {};
   const directionButtons = document.getElementById("directionButtons");
-    
-  function speak(text) {
-  const u = new SpeechSynthesisUtterance(text);
-  u.rate = 1.3;
-  u.volume = 1;
-  speechSynthesis.cancel();
-  speechSynthesis.speak(u);
-  }
-    
+
   allDirections.forEach(dir => {
     selectedDirections[dir.key] = true;
     const btn = document.createElement("button");
@@ -253,18 +244,13 @@
         drillView = document.getElementById("drillView"),
         configContainer = document.getElementById("configContainer");
 
-   function toggleDirection(key) {
+  function toggleDirection(key) {
     selectedDirections[key] = !selectedDirections[key];
     const btn = document.querySelector(`.direction-btn[data-key="${key}"]`);
     const img = btn.querySelector("img");
-    
-    // Convert key to match your filename format (front-left becomes ffront_left)
-    const fadedKey = 'f' + key.replace(/-/g, '_');
-    
     img.src = selectedDirections[key]
       ? `images/${key}.png`
-      : `images/${fadedKey}.png`;
-      
+      : `images/f${key}.png`;
     clickSound.currentTime = 0;
     clickSound.play();
   }
@@ -408,7 +394,6 @@
 
     const filteredDirections = allDirections.filter(d => selectedDirections[d.key]);
     if (filteredDirections.length === 0) return;
-    
     const move = filteredDirections[Math.floor(Math.random() * filteredDirections.length)];
     directionEl.style.display = "block";
     imageEl.style.display = "block";
@@ -417,6 +402,7 @@
     countdownEl.textContent = "";
     playBeep();
     speak(move.name);
+
     moveCount++;
 
     interval = setTimeout(() => {
