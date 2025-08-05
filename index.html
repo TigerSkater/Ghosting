@@ -292,45 +292,67 @@
   }
 
   function startDrill() {
-    const selected = Object.values(selectedDirections).some(val => val);
-    const errorEl = document.getElementById("error-message");
+  const errorEl = document.getElementById("error-message");
 
-    if (!selected) {
-      errorEl.textContent = "⚠️ Please select at least one direction!";
-      return;  // stop here, don’t start drill
-    } else {
-      errorEl.textContent = ""; // clear previous error
-    }
-
-    stopped = false; 
-    currentSet = 1; 
-    moveCount = 0;
-    totalSets = parseInt(document.getElementById("setsInput").value);
-    movesPerSet = parseInt(document.getElementById("movesInput").value);
-    secondsPerMove = parseInt(document.getElementById("secondsInput").value);
-    breakPerMove = parseInt(document.getElementById("moveBreakInput").value);
-    breakPerSet = parseInt(document.getElementById("setBreakInput").value);
-    motivationOn = motivationCheckbox.checked;
-
-    configContainer.classList.add("hide");
-    drillView.classList.add("active");
-
-    directionEl.textContent = "";
-    imageEl.src = "";
-
-    runMove();
+  // Check if at least one direction is selected
+  const selected = Object.values(selectedDirections).some(val => val);
+  if (!selected) {
+    errorEl.textContent = "⚠️ Please select at least one direction!";
+    return;
   }
-    function stopDrill() {
-      stopped = true;
-      clearTimeout(interval);
-      clearInterval(countdownInterval);
-      directionEl.textContent = "Drill Stopped.";
-      imageEl.src = "";
-      countdownEl.textContent = "";
-      speechSynthesis.cancel();
-      drillView.classList.remove("active");
-      configContainer.classList.remove("hide");
+
+  // Check if any required input is blank (""), but allow "0"
+  const inputs = [
+    { id: "setsInput", label: "Number of Sets" },
+    { id: "movesInput", label: "Moves per Set" },
+    { id: "secondsInput", label: "Reaction Time" },
+    { id: "moveBreakInput", label: "Reposition Time" },
+    { id: "setBreakInput", label: "Rest Between Sets" }
+  ];
+
+  for (const input of inputs) {
+    const value = document.getElementById(input.id).value;
+    if (value === "") {
+      errorEl.textContent = `⚠️ Please fill in: ${input.label}`;
+      return;
     }
+  }
+
+  // All clear – reset error
+  errorEl.textContent = "";
+
+  // Initialize drill
+  stopped = false;
+  currentSet = 1;
+  moveCount = 0;
+
+  totalSets = parseInt(document.getElementById("setsInput").value);
+  movesPerSet = parseInt(document.getElementById("movesInput").value);
+  secondsPerMove = parseInt(document.getElementById("secondsInput").value);
+  breakPerMove = parseInt(document.getElementById("moveBreakInput").value);
+  breakPerSet = parseInt(document.getElementById("setBreakInput").value);
+  motivationOn = motivationCheckbox.checked;
+
+  configContainer.classList.add("hide");
+  drillView.classList.add("active");
+
+  directionEl.textContent = "";
+  imageEl.src = "";
+
+  runMove();
+}
+
+  function stopDrill() {
+    stopped = true;
+    clearTimeout(interval);
+    clearInterval(countdownInterval);
+    directionEl.textContent = "Drill Stopped.";
+    imageEl.src = "";
+    countdownEl.textContent = "";
+    speechSynthesis.cancel();
+    drillView.classList.remove("active");
+    configContainer.classList.remove("hide");
+}
 
     function runMove() {
     if (stopped) return;
