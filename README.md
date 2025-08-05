@@ -31,5 +31,5 @@ This is a reimagined version — lighter, mobile-friendly, and voice-integrated 
 
 Created By
 
-Sofia Tang
+Sofia T.
 Design, code, and customization
