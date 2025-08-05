@@ -8,30 +8,77 @@
   <style>
     body {
       background-color: #f7e7ce;
-      font-family: 'Times New Roman', serif;
+      font-family: 'Segoe UI', sans-serif;
       color: #333;
       text-align: center;
       padding: 20px;
-      overflow-x: hidden;
     }
 
     h1 {
       font-family: 'Dancing Script', cursive;
-      font-size: 3.2em;
-      color: #f7e7ce;
+      font-size: 3.5em;
+      color: #722f37;
+      text-shadow: 1px 1px 2px #f2acb3;
       margin-bottom: 0.5em;
-      background-color: #b35a7a;
-      padding: 10px;
-      border-radius: 10px;
-      display: inline-block;
+    }
+
+    #floatingGhost {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 80px;
+      opacity: 0.9;
+      z-index: 10;
+      animation: floatGhost 3s ease-in-out infinite;
+    }
+
+    @keyframes floatGhost {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
+      100% { transform: translateY(0); }
+    }
+
+    #configContainer {
+      transition: opacity 0.5s ease;
+    }
+
+    .hide {
+      display: none;
+    }
+
+    label, input {
+      font-family: 'Times New Roman', serif;
+      font-size: 1.2em;
+      margin: 5px;
+    }
+
+    button {
+      font-size: 1.2em;
+      padding: 8px 16px;
+      font-family: 'Times New Roman', serif;
+      margin: 10px;
+      cursor: pointer;
+    }
+
+    #drillView {
+      display: none;
+      animation: zoomIn 0.8s ease forwards;
+    }
+
+    #drillView.active {
+      display: block;
+    }
+
+    @keyframes zoomIn {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
     }
 
     #direction {
-      font-size: 3em;
-      font-weight: bold;
+      font-size: 2.6em;
+      font-weight: 600;
       margin-bottom: 0.3em;
       color: #2c3e50;
-      transition: transform 0.5s ease;
     }
 
     #countdown {
@@ -44,202 +91,208 @@
       width: 85vw;
       max-width: 550px;
       height: auto;
-      display: none;
+      display: block;
       margin: 0 auto 1em auto;
-      transition: transform 0.5s ease;
     }
 
     #statusMessage {
-      font-size: 1.4em;
+      font-size: 1.5em;
       font-weight: 500;
       margin-top: 1em;
       color: #7a4069;
     }
 
-    input, button {
+    #stopButton {
+      margin-top: 20px;
+      padding: 10px 25px;
       font-size: 1.2em;
-      padding: 5px 10px;
-      margin: 5px;
       font-family: 'Times New Roman', serif;
+      background-color: #b35a7a;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
     }
 
-    label {
-      font-size: 1.2em;
-      margin-right: 10px;
-      font-family: 'Times New Roman', serif;
-    }
-
-    #ghost {
-      width: 120px;
-      display: none;
-      margin: 20px auto;
-      animation: float 2s infinite ease-in-out;
-    }
-
-    @keyframes float {
-      0% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
-      100% { transform: translateY(0); }
-    }
-
-    .zoom {
-      transform: scale(1.2);
+    #stopButton:hover {
+      background-color: #8e3c5c;
     }
   </style>
 </head>
 <body>
+  <img src="https://i.pinimg.com/originals/99/37/30/993730e1d3019ac8611e2401b63fbc16.gif"
+    alt="Floating Ghost"
+    id="floatingGhost" />
+
   <h1>Squash Ghosting Drill</h1>
-  <div id="ghostContainer"><img id="ghost" src="https://i.pinimg.com/originals/99/37/30/993730e1d3019ac8611e2401b63fbc16.gif" alt="Ghost animation" /></div>
-  
-  <div>
-    <label>Sets:</label><input type="number" id="sets" value="2" min="1" />
-    <label>Moves per Set:</label><input type="number" id="moves" value="4" min="1" />
-    <label>Seconds per Move:</label><input type="number" id="seconds" value="5" min="1" />
-    <button onclick="startDrill()">Start</button>
-    <button onclick="stopDrill()">Stop</button>
+
+  <div id="configContainer">
+    <label>Sets:</label><input type="number" id="setsInput" min="1" value="3"/>
+    <label>Moves per set:</label><input type="number" id="movesInput" min="1" value="15"/><br><br>
+
+    <label>Seconds per move:</label><input type="number" id="secondsInput" min="1" value="3"/>
+    <label>Break between moves (s):</label><input type="number" id="moveBreakInput" min="0" value="1"/>
+    <label>Break between sets (s):</label><input type="number" id="setBreakInput" min="1" value="6"/>
+    <div>
+      <input type="checkbox" id="motivationCheckbox" checked/>
+      <label for="motivationCheckbox">Enable Motivational Messages</label>
+    </div><br>
+    <button onclick="startDrill()">Start Drill</button>
   </div>
 
-  <div id="direction"></div>
-  <img id="image" src="" alt="" />
-  <div id="countdown"></div>
-  <div id="statusMessage"></div>
-
-  <audio id="beep" src="audio/beep.mp3"></audio>
-  <audio id="clank" src="audio/clank.mp3"></audio>
+  <div id="drillView">
+    <div id="direction"></div>
+    <div id="countdown"></div>
+    <img id="image" src="" alt="Direction Image" />
+    <div id="statusMessage"></div>
+    <button onclick="stopDrill()" id="stopButton">Stop</button>
+  </div>
 
   <script>
     const directions = [
-      { name: "Front Left", image: "images/front-left.png" },
-      { name: "Front Right", image: "images/front-right.png" },
-      { name: "Side Left", image: "images/side-left.png" },
-      { name: "Side Right", image: "images/side-right.png" },
-      { name: "Back Left", image: "images/back-left.png" },
-      { name: "Back Right", image: "images/back-right.png" }
+      { name: "Front Left",  img: "images/front-left.png" },
+      { name: "Front Right", img: "images/front-right.png" },
+      { name: "Side Left",   img: "images/side-left.png" },
+      { name: "Side Right",  img: "images/side-right.png" },
+      { name: "Back Left",   img: "images/back-left.png" },
+      { name: "Back Right",  img: "images/back-right.png" }
     ];
 
     const motivationalLines = [
-      { text: "You're faster than you think!" },
-      { text: "Keep your core strong!" },
-      { audio: "audio/run-faster.mp3", label: "Sofia test" }
+      { text: "Your break is over. Cry later. Move now." },
+      { text: "The floor misses you. Go make it sweat!" },
+      { text: "Congratulations, you are now… still not done!" },
+      { text: "Your coach called. They said move!" },
+      { audio: "audio/run-faster.mp3", label: "Run Faster, Sofia Test" },
+      { audio: "audio/run-faster.mp3", label: "Run Faster, Sofia Test" }
     ];
 
-    let currentSet = 0;
-    let currentMove = 0;
-    let sets = 0;
-    let moves = 0;
-    let secondsPerMove = 0;
-    let drillActive = false;
+    let currentSet = 0, moveCount = 0, totalSets = 0, movesPerSet = 0,
+        secondsPerMove = 0, breakPerMove = 0, breakPerSet = 0,
+        interval, countdownInterval, stopped = false, motivationOn = true;
+
+    const directionEl = document.getElementById("direction"),
+          countdownEl = document.getElementById("countdown"),
+          imageEl = document.getElementById("image"),
+          motivationCheckbox = document.getElementById("motivationCheckbox"),
+          drillView = document.getElementById("drillView"),
+          configContainer = document.getElementById("configContainer");
 
     function speak(text) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.1;
-      speechSynthesis.speak(utterance);
-    }
-
-    function playAudio(src) {
-      const audio = new Audio(src);
-      audio.play();
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 1.3;
+      u.volume = 1;
+      speechSynthesis.cancel();
+      speechSynthesis.speak(u);
     }
 
     function playBeep() {
-      document.getElementById("beep").play();
+      new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg").play();
     }
 
-    function playClank() {
-      document.getElementById("clank").play();
-    }
-
-    function getRandomMotivation() {
-      const msgObj = motivationalLines[Math.floor(Math.random() * motivationalLines.length)];
-      if (msgObj.audio) {
-        playAudio(msgObj.audio);
-        return msgObj.label || "";
-      } else {
-        speak(msgObj.text);
-        return msgObj.text;
-      }
+    function playBonk() {
+      new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg").play();
     }
 
     function startDrill() {
-      if (drillActive) return;
-      sets = parseInt(document.getElementById("sets").value);
-      moves = parseInt(document.getElementById("moves").value);
-      secondsPerMove = parseInt(document.getElementById("seconds").value);
-      currentSet = 0;
-      currentMove = 0;
-      drillActive = true;
-      document.getElementById("ghost").style.display = "block";
-      nextMove();
+      stopped = false; currentSet = 1; moveCount = 0;
+      totalSets = parseInt(document.getElementById("setsInput").value);
+      movesPerSet = parseInt(document.getElementById("movesInput").value);
+      secondsPerMove = parseInt(document.getElementById("secondsInput").value);
+      breakPerMove = parseInt(document.getElementById("moveBreakInput").value);
+      breakPerSet = parseInt(document.getElementById("setBreakInput").value);
+      motivationOn = motivationCheckbox.checked;
+
+      configContainer.classList.add("hide");
+      drillView.classList.add("active");
+
+      runMove();
     }
 
     function stopDrill() {
-      drillActive = false;
-      document.getElementById("direction").innerText = "";
-      document.getElementById("image").style.display = "none";
-      document.getElementById("countdown").innerText = "";
-      document.getElementById("statusMessage").innerText = "Drill stopped.";
-      document.getElementById("ghost").style.display = "none";
+      stopped = true;
+      clearTimeout(interval);
+      clearInterval(countdownInterval);
+      directionEl.textContent = "Drill Stopped.";
+      imageEl.src = "";
+      countdownEl.textContent = "";
+      speechSynthesis.cancel();
+      drillView.classList.remove("active");
+      configContainer.classList.remove("hide");
     }
 
-    function nextMove() {
-      if (!drillActive) return;
+    function runMove() {
+  if (stopped) return;
+  if (moveCount >= movesPerSet) {
+    if (currentSet >= totalSets) {
+      directionEl.style.display = "none";
+      imageEl.style.display = "none";
+      directionEl.textContent = "";
+      imageEl.src = "";
+      countdownEl.textContent = "";
+      return;
+    }
+    runSetBreak(); return;
+  }
 
-      if (currentMove === 0 && currentSet === 0) {
-        document.getElementById("statusMessage").innerText = "Starting Drill!";
-      }
+  const move = directions[Math.floor(Math.random() * directions.length)];
+  directionEl.style.display = "block";  // show
+  imageEl.style.display = "block";      // show
+  directionEl.textContent = move.name;
+  imageEl.src = move.img;
+  countdownEl.textContent = "";
+  playBeep(); speak(move.name);
+  moveCount++;
 
-      if (currentMove >= moves) {
-        currentSet++;
-        currentMove = 0;
-        if (currentSet >= sets) {
-          drillActive = false;
-          document.getElementById("statusMessage").innerText = "Drill complete!";
-          document.getElementById("direction").innerText = "";
-          document.getElementById("image").style.display = "none";
-          document.getElementById("countdown").innerText = "";
-          return;
-        }
-      }
+  interval = setTimeout(() => {
+    if (stopped) return;
+    // Hide elements during break so no box or empty space remains
+    directionEl.style.display = "none";  
+    imageEl.style.display = "none";
 
-      const direction = directions[Math.floor(Math.random() * directions.length)];
-      const dirElem = document.getElementById("direction");
-      const imgElem = document.getElementById("image");
+    playBonk(); // bonk after image disappears
 
-      dirElem.innerText = direction.name;
-      imgElem.src = direction.image;
-      imgElem.alt = direction.name;
-      imgElem.style.display = "block";
-
-      dirElem.classList.add("zoom");
-      imgElem.classList.add("zoom");
-      setTimeout(() => {
-        dirElem.classList.remove("zoom");
-        imgElem.classList.remove("zoom");
-      }, 500);
-
-      let secondsLeft = secondsPerMove;
-      document.getElementById("countdown").innerText = secondsLeft;
+    setTimeout(() => {
+      if (!stopped) runMove();
+    }, breakPerMove * 1000);
+  }, secondsPerMove * 1000);
+}
+    function runSetBreak() {
+      currentSet++;
+      moveCount = 0;
+      directionEl.textContent = "Break between sets";
+      imageEl.src = "";
+      let countdown = breakPerSet;
+      countdownEl.textContent = countdown;
       playBeep();
 
-      const countdownInterval = setInterval(() => {
-        if (!drillActive) {
+      countdownInterval = setInterval(() => {
+        if (stopped) {
           clearInterval(countdownInterval);
           return;
         }
-
-        secondsLeft--;
-        document.getElementById("countdown").innerText = secondsLeft;
-
-        if (secondsLeft <= 0) {
+        countdown--;
+        if (countdown > 0) {
+          countdownEl.textContent = countdown;
+          playBeep();
+        } else {
           clearInterval(countdownInterval);
-          playClank();
-          imgElem.style.display = "none";
-          dirElem.innerText = "";
-          document.getElementById("countdown").innerText = "";
-          document.getElementById("statusMessage").innerText = getRandomMotivation();
-
-          currentMove++;
-          setTimeout(nextMove, 3000); // break between moves
+          countdownEl.textContent = "";
+          if (motivationOn) {
+            const msgObj = motivationalLines[Math.floor(Math.random() * motivationalLines.length)];
+            if (msgObj.audio) {
+              const audio = new Audio(msgObj.audio);
+              audio.play().catch(e => console.error("Audio play failed:", e));
+              setTimeout(() => { if (!stopped) runMove(); }, 3000);
+            } else {
+              speak(msgObj.text);
+              setTimeout(() => { if (!stopped) runMove(); }, 3000);
+            }
+          } else {
+            playBeep();
+            runMove();
+          }
         }
       }, 1000);
     }
