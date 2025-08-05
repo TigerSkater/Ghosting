@@ -118,51 +118,73 @@
     #stopButton:hover {
       background-color: #8e3c5c;
     }
+
+    .direction-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .direction-btn {
+      width: 100px;
+      height: 100px;
+      border: none;
+      background: none;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .direction-btn img {
+      width: 100%;
+      height: auto;
+      transition: opacity 0.3s;
+    }
   </style>
 </head>
 <body>
   <img src="https://i.pinimg.com/originals/99/37/30/993730e1d3019ac8611e2401b63fbc16.gif" alt="Floating Ghost" id="floatingGhost" />
   <h1>Squash Ghosting Drill</h1>
 
-  <!-- The rest of your code including updated layout and checkbox image grid will go here -->
-
   <div id="configContainer" style="max-width: 500px; margin: 0 auto;">
-  <div style="display: flex; flex-direction: column; gap: 12px; font-family: sans-serif;">
+    <div style="display: flex; flex-direction: column; gap: 12px; font-family: sans-serif;">
 
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-      <label for="setsInput" style="flex: 1;">Number of Sets:</label>
-      <input type="number" id="setsInput" min="1" step="1" placeholder="Insert number of sets" style="flex: 1;" />
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <label for="setsInput" style="flex: 1;">Number of Sets:</label>
+        <input type="number" id="setsInput" min="1" step="1" placeholder="Insert number of sets" style="flex: 1;" />
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <label for="movesInput" style="flex: 1;">Moves per Set:</label>
+        <input type="number" id="movesInput" min="1" step="1" placeholder="Insert number of moves" style="flex: 1;" />
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <label for="secondsInput" style="flex: 1;">Reaction Time (s):</label>
+        <input type="number" id="secondsInput" min="0.1" step="0.1" placeholder="Insert seconds" style="flex: 1;" />
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <label for="moveBreakInput" style="flex: 1;">Reposition Time (s):</label>
+        <input type="number" id="moveBreakInput" min="0" step="0.1" placeholder="Insert seconds" style="flex: 1;" />
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <label for="setBreakInput" style="flex: 1;">Rest Between Sets (s):</label>
+        <input type="number" id="setBreakInput" min="0" step="0.1" placeholder="Insert seconds" style="flex: 1;" />
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <input type="checkbox" id="motivationCheckbox" checked/>
+        <label for="motivationCheckbox">Enable Motivational Messages</label>
+      </div>
+
+      <div class="direction-grid" id="directionButtons"></div>
+
+      <button onclick="startDrill()">Start Drill</button>
+
     </div>
-
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-      <label for="movesInput" style="flex: 1;">Set Time:</label>
-      <input type="number" id="movesInput" min="1" step="1" placeholder="Insert set time" style="flex: 1;" />
-    </div>
-
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-      <label for="secondsInput" style="flex: 1;">Reaction Time (s):</label>
-      <input type="number" id="secondsInput" min="0.1" step="0.1" placeholder="Insert seconds" style="flex: 1;" />
-    </div>
-
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-      <label for="moveBreakInput" style="flex: 1;">Reposition Time (s):</label>
-      <input type="number" id="moveBreakInput" min="0" step="0.1" placeholder="Insert seconds" style="flex: 1;" />
-    </div>
-
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-      <label for="setBreakInput" style="flex: 1;">Rest Between Sets (s):</label>
-      <input type="number" id="setBreakInput" min="0" step="0.1" placeholder="Insert seconds" style="flex: 1;" />
-    </div>
-
-    <div style="display: flex; align-items: center; gap: 8px;">
-      <input type="checkbox" id="motivationCheckbox" checked/>
-      <label for="motivationCheckbox">Enable Motivational Messages</label>
-    </div>
-
-    <button onclick="startDrill()">Start Drill</button>
-
   </div>
-</div>
 
   <div id="drillView">
     <div id="direction"></div>
@@ -173,21 +195,38 @@
   </div>
 
   <script>
-    const directions = [
-      { name: "Front Left",  img: "images/front-left.png" },
-      { name: "Front Right", img: "images/front-right.png" },
-      { name: "Side Left",   img: "images/side-left.png" },
-      { name: "Side Right",  img: "images/side-right.png" },
-      { name: "Back Left",   img: "images/back-left.png" },
-      { name: "Back Right",  img: "images/back-right.png" }
+    const allDirections = [
+      { name: "Front Left",  key: "front-left" },
+      { name: "Front Right", key: "front-right" },
+      { name: "Side Left",   key: "side-left" },
+      { name: "Side Right",  key: "side-right" },
+      { name: "Back Left",   key: "back-left" },
+      { name: "Back Right",  key: "back-right" }
     ];
+
+    let selectedDirections = {};
+    const directionButtons = document.getElementById("directionButtons");
+
+    allDirections.forEach(dir => {
+      selectedDirections[dir.key] = true;
+      const btn = document.createElement("button");
+      btn.className = "direction-btn";
+      const img = document.createElement("img");
+      img.src = `images/${dir.key}.png`;
+      img.alt = dir.name;
+      btn.appendChild(img);
+      btn.onclick = () => {
+        selectedDirections[dir.key] = !selectedDirections[dir.key];
+        img.src = selectedDirections[dir.key] ? `images/${dir.key}.png` : `images/f${dir.key.replace(/-/g, "_")}.png`;
+      };
+      directionButtons.appendChild(btn);
+    });
 
     const motivationalLines = [
       { text: "Your break is over. Cry later. Move now." },
       { text: "The floor misses you. Go make it sweat!" },
       { text: "Congratulations, you are now… still not done!" },
       { text: "Your coach called. They said move!" },
-      { audio: "audio/run-faster.mp3", label: "Run Faster, Sofia Test" },
       { audio: "audio/run-faster.mp3", label: "Run Faster, Sofia Test" }
     ];
 
@@ -246,41 +285,41 @@
     }
 
     function runMove() {
-  if (stopped) return;
-  if (moveCount >= movesPerSet) {
-    if (currentSet >= totalSets) {
-      directionEl.style.display = "none";
-      imageEl.style.display = "none";
-      directionEl.textContent = "";
-      imageEl.src = "";
+      if (stopped) return;
+      if (moveCount >= movesPerSet) {
+        if (currentSet >= totalSets) {
+          directionEl.style.display = "none";
+          imageEl.style.display = "none";
+          directionEl.textContent = "";
+          imageEl.src = "";
+          countdownEl.textContent = "";
+          return;
+        }
+        runSetBreak(); return;
+      }
+
+      const filteredDirections = allDirections.filter(d => selectedDirections[d.key]);
+      if (filteredDirections.length === 0) return;
+      const move = filteredDirections[Math.floor(Math.random() * filteredDirections.length)];
+      directionEl.style.display = "block";
+      imageEl.style.display = "block";
+      directionEl.textContent = move.name;
+      imageEl.src = `images/${move.key}.png`;
       countdownEl.textContent = "";
-      return;
+      playBeep(); speak(move.name);
+      moveCount++;
+
+      interval = setTimeout(() => {
+        if (stopped) return;
+        directionEl.style.display = "none";
+        imageEl.style.display = "none";
+        playBonk();
+        setTimeout(() => {
+          if (!stopped) runMove();
+        }, breakPerMove * 1000);
+      }, secondsPerMove * 1000);
     }
-    runSetBreak(); return;
-  }
 
-  const move = directions[Math.floor(Math.random() * directions.length)];
-  directionEl.style.display = "block";  // show
-  imageEl.style.display = "block";      // show
-  directionEl.textContent = move.name;
-  imageEl.src = move.img;
-  countdownEl.textContent = "";
-  playBeep(); speak(move.name);
-  moveCount++;
-
-  interval = setTimeout(() => {
-    if (stopped) return;
-    // Hide elements during break so no box or empty space remains
-    directionEl.style.display = "none";  
-    imageEl.style.display = "none";
-
-    playBonk(); // bonk after image disappears
-
-    setTimeout(() => {
-      if (!stopped) runMove();
-    }, breakPerMove * 1000);
-  }, secondsPerMove * 1000);
-}
     function runSetBreak() {
       currentSet++;
       moveCount = 0;
