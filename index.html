@@ -213,13 +213,48 @@
   let selectedDirections = {};
   const directionButtons = document.getElementById("directionButtons");
     
-  function speak(text) {
-  const u = new SpeechSynthesisUtterance(text);
-  u.rate = 1.3;
-  u.volume = 1;
-  speechSynthesis.cancel();
-  speechSynthesis.speak(u);
+  // Remove the duplicate speak() function (keep only one)
+function speak(text) {
+  // Check if speech synthesis is supported
+  if (!('speechSynthesis' in window)) {
+    console.warn('Speech synthesis not supported');
+    return;
   }
+  
+  // Cancel any ongoing speech
+  speechSynthesis.cancel();
+  
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = 1.3;
+  utterance.volume = 1;
+  
+  // Handle potential errors
+  utterance.onerror = (event) => {
+    console.error('Speech synthesis error:', event.error);
+  };
+  
+  speechSynthesis.speak(utterance);
+}
+
+// Modified playMotivationMessage function
+function playMotivationMessage(callback) {
+  if (!motivationOn) {
+    callback?.();
+    return;
+  }
+
+  const message = pickRandom(motivationMessages);
+  
+  // First try to speak the message directly
+  try {
+    speak(message);
+    // Wait for a reasonable duration before continuing
+    setTimeout(() => callback?.(), Math.max(2500, message.length * 150));
+  } catch (error) {
+    console.error('Failed to speak message:', error);
+    callback?.();
+  }
+}
     
   allDirections.forEach(dir => {
     selectedDirections[dir.key] = true;
@@ -234,13 +269,14 @@
     directionButtons.appendChild(btn);
   });
 
-  const motivationMessages = [
-    "Your break is over. Cry later. Move now.",
-    "The floor misses you. Go make it sweat!",
-    "Congratulations, you are now… still not done!",
-    "Your coach called. They said move!",
-    "Run Faster, Sofia Test"
-  ];
+  const motivationalLines = [
+      { text: "Your break is over. Cry later. Move now." },
+      { text: "The floor misses you. Go make it sweat!" },
+      { text: "Congratulations, you are now… still not done!" },
+      { text: "Your coach called. They said move!" },
+      { audio: "audio/run-faster.mp3", label: "Run Faster, Sofia Test" },
+      { audio: "audio/run-faster.mp3", label: "Run Faster, Sofia Test" }
+    ];
 
   let currentSet = 0, moveCount = 0, totalSets = 0, movesPerSet = 0,
       secondsPerMove = 0, breakPerMove = 0, breakPerSet = 0,
@@ -264,13 +300,7 @@
     clickSound.play();
   }
 
-  function speak(text) {
-    const u = new SpeechSynthesisUtterance(text);
-    u.rate = 1.3;
-    u.volume = 1;
-    speechSynthesis.cancel();
-    speechSynthesis.speak(u);
-  }
+  
 
   function playBeep() {
     new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg").play();
