@@ -275,21 +275,42 @@
     new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg").play();
   }
 
-  function playMotivationalMessage(callback) {
-    const msg = motivationalLines[Math.floor(Math.random() * motivationalLines.length)];
+  function playMotivationMessage(callback) {
+  if (!motivationOn) {
+    callback?.();
+    return;
+  }
 
-    if (msg.audio) {
-      const audio = new Audio(msg.audio);
-      audio.play().catch(err => {
-        console.warn("Audio failed:", err);
-        callback?.(); // fallback
-      });
-      audio.onended = () => callback?.();
-    } else {
-      speak(msg.text);
+  const message = pickRandom(motivationMessages); // just a string
+  const audioPath = `audio/${message}.mp3`;
+  const audio = new Audio(audioPath);
+
+  let played = false;
+
+  audio.addEventListener("canplaythrough", () => {
+    audio.play();
+    played = true;
+  });
+
+  audio.addEventListener("ended", () => {
+    callback?.(); // continue after audio finishes
+  });
+
+  audio.addEventListener("error", () => {
+    if (!played) {
+      speak(message);
+      setTimeout(() => callback?.(), 2500); // estimate duration of TTS
+    }
+  });
+
+  // Backup: in case canplaythrough or error don’t fire
+  setTimeout(() => {
+    if (!played) {
+      speak(message);
       setTimeout(() => callback?.(), 2500);
     }
-  }
+  }, 500);
+}
 
  function startDrill() {
   const errorEl = document.getElementById("error-message");
