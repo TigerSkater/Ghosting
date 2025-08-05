@@ -259,7 +259,7 @@
     const img = btn.querySelector("img");
     img.src = selectedDirections[key]
       ? `images/${key}.png`
-      : `images/f${key}.png`;
+      : `images/f${key}.png`;  // Changed to use hyphens in faded filenames
     clickSound.currentTime = 0;
     clickSound.play();
   }
