@@ -39,6 +39,12 @@
     #direction{ font-size:3rem; font-weight:900; color:var(--ink); margin:10px 0; min-height:2.6rem; }
     #countdown{ font-size:2.4rem; color:var(--accent); min-height:2.4rem; }
     #image{ width:85vw; max-width:520px; height:auto; display:none; margin:10px auto; background:#fff; border-radius:12px; border:1px solid #eee; }
+
+    /* End page */
+    #endView{ display:none; max-width:720px; margin:0 auto; }
+    #endView.active{ display:block; }
+    #endView h2{ font-family:'Dancing Script', cursive; font-size:2.6rem; color:#2c3e50; margin:18px 0 6px; }
+    #endView p{ font-size:1.2rem; color:#444; margin:0 0 12px; }
   </style>
 </head>
 <body>
@@ -66,6 +72,12 @@
     <button id="stopBtn">Stop</button>
   </div>
 
+  <div id="endView">
+    <h2>🎉 Congratulations! Drill Complete 🎉</h2>
+    <p>Nice work — you finished the session.</p>
+    <button id="restartBtn">Run Again</button>
+  </div>
+
 <script>
   const allDirections = [
     { name: 'Front Left',  key: 'front-left',  row:0 },
@@ -84,12 +96,14 @@
   const els = {
     config: document.getElementById('configContainer'),
     drill: document.getElementById('drillView'),
+    end: document.getElementById('endView'),
     direction: document.getElementById('direction'),
     countdown: document.getElementById('countdown'),
     image: document.getElementById('image'),
     dirBtns: document.getElementById('directionButtons'),
     start: document.getElementById('startBtn'),
     stop: document.getElementById('stopBtn'),
+    restart: document.getElementById('restartBtn'),
     error: document.getElementById('error-message')
   };
 
@@ -155,7 +169,7 @@
 
     const enabled=allDirections.filter(d=>selected[d.key]);
     controller=new AbortController(); const {signal}=controller;
-    els.config.style.display='none'; els.drill.classList.add('active'); els.start.disabled=true;
+    els.config.style.display='none'; els.end.classList.remove('active'); els.drill.classList.add('active'); els.start.disabled=true;
 
     try{
       for(let s=1;s<=totalSets;s++){
@@ -186,15 +200,23 @@
           els.direction.textContent='';
         }
       }
-      els.countdown.textContent='Drill Complete!';
-    }catch{}
-    finally{ stop(); }
+      // Show end page instead of returning to config
+      els.drill.classList.remove('active');
+      els.end.classList.add('active');
+    }catch(e){
+      // aborted or error -> fall back to stop
+      stop();
+    } finally {
+      // do not auto-stop on success; end page is visible
+    }
   }
 
-  function stop(){ controller?.abort(); controller=null; els.start.disabled=false; els.drill.classList.remove('active'); els.config.style.display='block'; els.direction.textContent=''; els.countdown.textContent=''; els.image.removeAttribute('src'); els.image.style.display='none'; }
+  function stop(){ controller?.abort(); controller=null; els.start.disabled=false; els.drill.classList.remove('active'); els.end.classList.remove('active'); els.config.style.display='block'; els.direction.textContent=''; els.countdown.textContent=''; els.image.removeAttribute('src'); els.image.style.display='none'; }
+
+  function restart(){ els.end.classList.remove('active'); els.config.style.display='block'; els.start.disabled=false; }
 
   buildButtons(); preloadImages();
-  els.start.onclick=run; els.stop.onclick=stop;
+  els.start.onclick=run; els.stop.onclick=stop; els.restart.onclick=restart;
 </script>
 </body>
 </html>
