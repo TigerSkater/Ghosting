@@ -3,18 +3,28 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Squash Ghosting Drill – Lite with Beeps</title>
+  <title>Squash Ghosting Drill</title>
+  <!-- Restored font -->
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
   <style>
-    body { background:#f7e7ce; font-family: system-ui, sans-serif; text-align:center; padding:20px; }
-    h1 { font-size: 2rem; color:#722f37; margin: 0 0 12px; }
+    :root { --ink:#2c3e50; --accent:#8e44ad; }
+    *{ box-sizing:border-box; }
+    body{ background:#f7e7ce; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color:#333; text-align:center; padding:20px; }
+    h1{ font-family:'Dancing Script', cursive; font-size:3rem; color:#722f37; text-shadow:1px 1px 2px #f2acb3; margin:0 0 12px; }
 
-    #configContainer{ max-width:520px; margin:0 auto; }
+    /* Floating ghost restored */
+    #floatingGhost{ position:fixed; top:20px; right:20px; width:80px; opacity:.9; z-index:10; animation:floatGhost 3s ease-in-out infinite; pointer-events:none; }
+    @keyframes floatGhost{ 0%{transform:translateY(0)} 50%{transform:translateY(-15px)} 100%{transform:translateY(0)} }
+
+    #configContainer{ max-width:560px; margin:0 auto; }
     .row{ display:flex; align-items:center; gap:10px; margin:8px 0; }
     .row>label{ flex:1; text-align:left; }
-    .row>input{ flex:1; padding:6px 10px; border:1px solid #ccc; border-radius:8px; }
+    .row>input{ flex:1; padding:8px 10px; border:1px solid #ccc; border-radius:8px; }
 
-    .direction-grid{ display:grid; grid-template-rows: repeat(3,auto); gap:12px; justify-content:center; margin-top:16px; }
+    .direction-grid{ display:grid; grid-template-rows:repeat(3,auto); gap:12px; justify-content:center; margin-top:16px; }
     .dir-row{ display:flex; justify-content:center; gap:16px; }
+    .row-head{ font-weight:700; color:#444; margin-top:6px; }
+
     .direction-btn{ width:120px; height:120px; border:1px solid #ddd; border-radius:10px; background:#fff; padding:0; cursor:pointer; }
     .direction-btn.active{ outline: 3px solid #0ea5a4; }
     .direction-btn img{ width:100%; height:100%; object-fit:contain; }
@@ -26,12 +36,15 @@
 
     #drillView{ display:none; max-width:720px; margin:0 auto; }
     #drillView.active{ display:block; }
-    #direction{ font-size:3rem; font-weight:900; color:#2c3e50; margin:10px 0; min-height:2.6rem; }
-    #countdown{ font-size:2.4rem; color:#8e44ad; min-height:2.4rem; }
+    #direction{ font-size:3rem; font-weight:900; color:var(--ink); margin:10px 0; min-height:2.6rem; }
+    #countdown{ font-size:2.4rem; color:var(--accent); min-height:2.4rem; }
+    #image{ width:85vw; max-width:520px; height:auto; display:none; margin:10px auto; background:#fff; border-radius:12px; border:1px solid #eee; }
   </style>
 </head>
 <body>
-  <h1>Squash Ghosting Drill – Lite</h1>
+  <!-- Floating ghost is back -->
+  <img src="https://i.pinimg.com/originals/99/37/30/993730e1d3019ac8611e2401b63fbc16.gif" alt="Floating Ghost" id="floatingGhost" />
+  <h1>Squash Ghosting Drill</h1>
 
   <div id="configContainer">
     <div class="row"><label for="setsInput">Number of Sets</label><input type="number" id="setsInput" min="1" step="1" placeholder="e.g., 3"></div>
@@ -40,6 +53,7 @@
     <div class="row"><label for="moveBreakInput">Reposition Time (s)</label><input type="number" id="moveBreakInput" min="0" step="0.1" placeholder="e.g., 0.6"></div>
     <div class="row"><label for="setBreakInput">Rest Between Sets (s)</label><input type="number" id="setBreakInput" min="0" step="1" placeholder="e.g., 20"></div>
 
+    <!-- Three-row layout: Front (top), Side (middle), Back (bottom) -->
     <div class="direction-grid" id="directionButtons"></div>
     <button id="startBtn">Start Drill</button>
     <div id="error-message"></div>
@@ -48,6 +62,7 @@
   <div id="drillView">
     <div id="direction"></div>
     <div id="countdown"></div>
+    <img id="image" src="" alt="Direction">
     <button id="stopBtn">Stop</button>
   </div>
 
@@ -61,20 +76,22 @@
     { name: 'Back Right',  key: 'back-right',  row:2 }
   ];
 
+  // Keep images and add simple beeps
+  const beep = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+  beep.preload = 'auto';
+
   const selected = Object.fromEntries(allDirections.map(d => [d.key, true]));
   const els = {
     config: document.getElementById('configContainer'),
     drill: document.getElementById('drillView'),
     direction: document.getElementById('direction'),
     countdown: document.getElementById('countdown'),
+    image: document.getElementById('image'),
     dirBtns: document.getElementById('directionButtons'),
     start: document.getElementById('startBtn'),
     stop: document.getElementById('stopBtn'),
     error: document.getElementById('error-message')
   };
-
-  const beep = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
-  beep.preload = 'auto';
 
   let controller = null;
 
@@ -82,7 +99,14 @@
     els.dirBtns.innerHTML = '';
     const rows = [[],[],[]];
     allDirections.forEach(d=>rows[d.row].push(d));
-    rows.forEach(r => {
+
+    const labels = ['Front','Side','Back'];
+    rows.forEach((r,i) => {
+      const head = document.createElement('div');
+      head.className = 'row-head';
+      head.textContent = labels[i];
+      els.dirBtns.appendChild(head);
+
       const rowDiv=document.createElement('div');
       rowDiv.className='dir-row';
       r.forEach(d=>{
@@ -99,6 +123,8 @@
     });
   }
 
+  function preloadImages(){ allDirections.forEach(d=>{ const im=new Image(); im.src=`images/${d.key}.png`; }); }
+
   function validate(){
     const defs=[['setsInput','Number of Sets',1],['movesInput','Moves per Set',1],['secondsInput','Reaction Time (s)',0.1],['moveBreakInput','Reposition Time (s)',0],['setBreakInput','Rest Between Sets (s)',0]];
     for(const [id,label,min] of defs){
@@ -112,6 +138,11 @@
 
   function sleep(ms,signal){ return new Promise((res,rej)=>{ if(signal?.aborted) return rej(); const id=setTimeout(res,ms); signal?.addEventListener('abort',()=>{clearTimeout(id);rej();},{once:true}); }); }
   function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  // Unlock audio on first interaction
+  function unlockAudioOnce(){ try{ beep.play().then(()=>beep.pause()).catch(()=>{}); }catch(e){} document.removeEventListener('click', unlockAudioOnce); document.removeEventListener('touchstart', unlockAudioOnce); }
+  document.addEventListener('click', unlockAudioOnce, { once:true });
+  document.addEventListener('touchstart', unlockAudioOnce, { once:true });
 
   async function run(){
     const err=validate(); if(err){ els.error.textContent='⚠️ '+err; return; }
@@ -130,23 +161,39 @@
       for(let s=1;s<=totalSets;s++){
         for(let m=1;m<=movesPerSet;m++){
           const step=pick(enabled);
+          // SHOW: set src, show image, beep
           els.direction.textContent=step.name;
-          beep.currentTime=0; beep.play();
+          els.image.src=`images/${step.key}.png`;
+          els.image.style.display='block';
+          try{ beep.currentTime=0; beep.play(); }catch(e){}
           await sleep(secondsPerMove*1000,signal);
+
+          // HIDE: remove src, hide image, beep
           els.direction.textContent='';
-          beep.currentTime=0; beep.play();
+          els.image.removeAttribute('src');
+          els.image.style.display='none';
+          try{ beep.currentTime=0; beep.play(); }catch(e){}
           if(breakPerMove>0) await sleep(breakPerMove*1000,signal);
         }
-        if(s<totalSets){\n          // Show a visible countdown during the rest between sets\n          els.direction.textContent='Rest';\n          for(let t=Math.max(0, Math.round(breakPerSet)); t>0; t--){\n            els.countdown.textContent = String(t);\n            try{ beep.currentTime=0; beep.play(); }catch(e){}\n            await sleep(1000, signal);\n          }\n          els.countdown.textContent='';\n          els.direction.textContent='';\n        }
+        if(s<totalSets){
+          els.direction.textContent='Rest';
+          for(let t=Math.max(0, Math.round(breakPerSet)); t>0; t--){
+            els.countdown.textContent = String(t);
+            try{ beep.currentTime=0; beep.play(); }catch(e){}
+            await sleep(1000, signal);
+          }
+          els.countdown.textContent='';
+          els.direction.textContent='';
+        }
       }
       els.countdown.textContent='Drill Complete!';
     }catch{}
     finally{ stop(); }
   }
 
-  function stop(){ controller?.abort(); controller=null; els.start.disabled=false; els.drill.classList.remove('active'); els.config.style.display='block'; els.direction.textContent=''; els.countdown.textContent=''; }
+  function stop(){ controller?.abort(); controller=null; els.start.disabled=false; els.drill.classList.remove('active'); els.config.style.display='block'; els.direction.textContent=''; els.countdown.textContent=''; els.image.removeAttribute('src'); els.image.style.display='none'; }
 
-  buildButtons();
+  buildButtons(); preloadImages();
   els.start.onclick=run; els.stop.onclick=stop;
 </script>
 </body>
