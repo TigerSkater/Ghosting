@@ -3,333 +3,156 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Squash Ghosting Drill</title>
-  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap" rel="stylesheet">
+  <title>Squash Ghosting Drill – Lite</title>
   <style>
-    :root { --teal: #0ea5a4; }
-    body {
-      background-color: #f7e7ce;
-      font-family: 'Segoe UI', sans-serif;
-      color: #333;
-      text-align: center;
-      padding: 20px;
-    }
-    h1 {
-      font-family: 'Dancing Script', cursive;
-      font-size: 3.2rem;
-      color: #722f37;
-      text-shadow: 1px 1px 2px #f2acb3;
-      margin-bottom: 0.25em;
-    }
-    #floatingGhost {
-      position: fixed; top: 20px; right: 20px; width: 80px; opacity: 0.9; z-index: 10;
-      animation: floatGhost 3s ease-in-out infinite;
-      pointer-events: none;
-    }
-    @keyframes floatGhost { 0% {transform: translateY(0);} 50% {transform: translateY(-15px);} 100% {transform: translateY(0);} }
+    body { background:#f7e7ce; font-family: system-ui, sans-serif; text-align:center; padding:20px; }
+    h1 { font-size: 2rem; color:#722f37; margin: 0 0 12px; }
 
-    #configContainer { transition: opacity 0.35s ease; max-width: 520px; margin: 0 auto; }
-    .hide { display: none !important; }
+    #configContainer{ max-width:520px; margin:0 auto; }
+    .row{ display:flex; align-items:center; gap:10px; margin:8px 0; }
+    .row>label{ flex:1; text-align:left; }
+    .row>input{ flex:1; padding:6px 10px; border:1px solid #ccc; border-radius:8px; }
 
-    label, input { font-family: 'Times New Roman', serif; font-size: 1.1rem; margin: 4px; }
-    button { font-size: 1.05rem; padding: 10px 16px; font-family: 'Times New Roman', serif; margin: 10px; cursor: pointer; }
+    .direction-grid{ display:grid; grid-template-rows: repeat(3,auto); gap:12px; justify-content:center; margin-top:16px; }
+    .dir-row{ display:flex; justify-content:center; gap:16px; }
+    .direction-btn{ width:120px; height:120px; border:1px solid #ddd; border-radius:10px; background:#fff; padding:0; cursor:pointer; }
+    .direction-btn.active{ outline: 3px solid #0ea5a4; }
+    .direction-btn img{ width:100%; height:100%; object-fit:contain; }
 
-    #drillView { display: none; animation: zoomIn 0.5s ease forwards; }
-    #drillView.active { display: block; }
-    @keyframes zoomIn { 0% { transform: scale(0.98); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    button{ padding:10px 16px; border:0; border-radius:8px; background:#b35a7a; color:#fff; cursor:pointer; margin-top:10px; }
+    button:disabled{ opacity:.6; cursor:not-allowed; }
 
-    #direction { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.25em; color: #2c3e50; }
-    #countdown { font-size: 3rem; color: #8e44ad; margin: 0.5em 0; min-height: 1.1em; }
+    #error-message{ color:#c00; font-weight:700; min-height:1.2em; margin-top:6px; }
 
-    #image { width: 85vw; max-width: 550px; height: auto; display: block; margin: 0.25em auto 0.75em auto; }
-    #statusMessage { font-size: 1.2rem; font-weight: 500; margin-top: 0.5em; color: #7a4069; min-height: 1.2em; }
-
-    #stopButton { margin-top: 12px; padding: 10px 22px; font-size: 1.05rem; font-family: 'Times New Roman', serif; background-color: #b35a7a; color: white; border: none; border-radius: 8px; cursor: pointer; transition: background-color 0.25s ease; }
-    #stopButton:hover { background-color: #8e3c5c; }
-
-    .direction-grid { display: flex; justify-content: center; flex-wrap: wrap; gap: 18px; margin-top: 12px; }
-    .direction-btn { width: 140px; height: 140px; border: 2px solid #ddd; border-radius: 12px; background: #fff; padding: 0; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.06); transition: transform .08s ease, border-color .2s ease; }
-    .direction-btn img { width: 100%; height: 100%; object-fit: contain; }
-    .direction-btn.active { border-color: var(--teal); box-shadow: 0 4px 10px rgba(0,0,0,0.08); transform: translateY(-2px); }
-
-    .row { display:flex; justify-content:space-between; align-items:center; gap:10px; }
-    .row > label { flex: 1; text-align: left; }
-    .row > input { flex: 1; padding: 6px 8px; border: 1px solid #ccc; border-radius: 8px; }
-
-    #error-message { color: red; font-weight: 700; text-align:center; margin-top: 10px; min-height: 1.2em; }
+    #drillView{ display:none; max-width:720px; margin:0 auto; }
+    #drillView.active{ display:block; }
+    #direction{ font-size:1.8rem; font-weight:800; color:#2c3e50; margin:10px 0; min-height:2.2rem; }
+    #countdown{ font-size:2rem; color:#8e44ad; min-height:2.2rem; }
+    #image{ width:85vw; max-width:520px; height:auto; display:block; margin:10px auto; background:#fff; border-radius:12px; border:1px solid #eee; }
   </style>
 </head>
 <body>
-  <img src="https://i.pinimg.com/originals/99/37/30/993730e1d3019ac8611e2401b63fbc16.gif" alt="Floating Ghost" id="floatingGhost" />
-  <h1>Squash Ghosting Drill</h1>
+  <h1>Squash Ghosting Drill – Lite</h1>
 
   <div id="configContainer">
-    <div style="display:flex; flex-direction:column; gap: 12px; font-family: sans-serif;">
-      <div class="row"><label for="setsInput">Number of Sets:</label><input type="number" id="setsInput" min="1" step="1" placeholder="e.g., 3" /></div>
-      <div class="row"><label for="movesInput">Moves per Set:</label><input type="number" id="movesInput" min="1" step="1" placeholder="e.g., 10" /></div>
-      <div class="row"><label for="secondsInput">Reaction Time (s):</label><input type="number" id="secondsInput" min="0.1" step="0.1" placeholder="e.g., 1.2" /></div>
-      <div class="row"><label for="moveBreakInput">Reposition Time (s):</label><input type="number" id="moveBreakInput" min="0" step="0.1" placeholder="e.g., 0.6" /></div>
-      <div class="row"><label for="setBreakInput">Rest Between Sets (s):</label><input type="number" id="setBreakInput" min="0" step="1" placeholder="e.g., 20" /></div>
-      <div style="display:flex; align-items:center; gap:8px; justify-content:center;">
-        <input type="checkbox" id="motivationCheckbox" checked>
-        <label for="motivationCheckbox">Enable Motivational Messages</label>
-      </div>
-      <div class="direction-grid" id="directionButtons"></div>
-      <div>
-        <button id="startBtn">Start Drill</button>
-      </div>
-      <div id="error-message"></div>
-    </div>
+    <div class="row"><label for="setsInput">Number of Sets</label><input type="number" id="setsInput" min="1" step="1" placeholder="e.g., 3"></div>
+    <div class="row"><label for="movesInput">Moves per Set</label><input type="number" id="movesInput" min="1" step="1" placeholder="e.g., 10"></div>
+    <div class="row"><label for="secondsInput">Reaction Time (s)</label><input type="number" id="secondsInput" min="0.1" step="0.1" placeholder="e.g., 1.2"></div>
+    <div class="row"><label for="moveBreakInput">Reposition Time (s)</label><input type="number" id="moveBreakInput" min="0" step="0.1" placeholder="e.g., 0.6"></div>
+    <div class="row"><label for="setBreakInput">Rest Between Sets (s)</label><input type="number" id="setBreakInput" min="0" step="1" placeholder="e.g., 20"></div>
+
+    <div class="direction-grid" id="directionButtons"></div>
+    <button id="startBtn">Start Drill</button>
+    <div id="error-message"></div>
   </div>
 
   <div id="drillView">
     <div id="direction"></div>
     <div id="countdown"></div>
-    <img id="image" src="" alt="Direction Image" />
-    <div id="statusMessage"></div>
-    <button id="stopButton">Stop</button>
+    <img id="image" src="" alt="Direction">
+    <button id="stopBtn">Stop</button>
   </div>
 
 <script>
-  // ----------- Stable state & utilities -----------
-  const sounds = {
-    click: new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"),
-    beep:  new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg"),
-    bonk:  new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"),
-  };
-  for (const a of Object.values(sounds)) { a.preload = 'auto'; a.load?.(); }
-
   const allDirections = [
-    { name: "Front Left",  key: "front-left" }, { name: "Front Right", key: "front-right" },
-    { name: "Side Left",   key: "side-left"  }, { name: "Side Right",  key: "side-right"  },
-    { name: "Back Left",   key: "back-left"  }, { name: "Back Right",  key: "back-right"  }
+    { name: 'Front Left',  key: 'front-left',  row:0 },
+    { name: 'Front Right', key: 'front-right', row:0 },
+    { name: 'Side Left',   key: 'side-left',   row:1 },
+    { name: 'Side Right',  key: 'side-right',  row:1 },
+    { name: 'Back Left',   key: 'back-left',   row:2 },
+    { name: 'Back Right',  key: 'back-right',  row:2 }
   ];
 
-  const motivationalLines = [
-    { text: "Your break is over. Cry later. Move now." },
-    { text: "The floor misses you. Go make it sweat!" },
-    { text: "Congratulations, you are now… still not done!" },
-    { text: "Your coach called. They said move it!" },
-    { audio: "audio/run-faster.mp3", label: "Run faster!" }
-  ];
-
-  let running = false;
-  let aborter = null; // AbortController for cancelling sleeps/speech cleanly
-
-  const selectedDirections = Object.fromEntries(allDirections.map(d => [d.key, true]));
-
+  const selected = Object.fromEntries(allDirections.map(d => [d.key, true]));
   const els = {
+    config: document.getElementById('configContainer'),
+    drill: document.getElementById('drillView'),
     direction: document.getElementById('direction'),
     countdown: document.getElementById('countdown'),
     image: document.getElementById('image'),
-    motivationCheckbox: document.getElementById('motivationCheckbox'),
-    drillView: document.getElementById('drillView'),
-    config: document.getElementById('configContainer'),
-    directionButtons: document.getElementById('directionButtons'),
-    error: document.getElementById('error-message'),
-    startBtn: document.getElementById('startBtn'),
-    stopBtn: document.getElementById('stopButton'),
-    status: document.getElementById('statusMessage'),
+    dirBtns: document.getElementById('directionButtons'),
+    start: document.getElementById('startBtn'),
+    stop: document.getElementById('stopBtn'),
+    error: document.getElementById('error-message')
   };
 
-  function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-  function play(audio) { try { audio.currentTime = 0; audio.play(); } catch(e){} }
+  let controller = null;
 
-  function sleep(ms, signal) {
-    return new Promise((resolve, reject) => {
-      if (signal?.aborted) return reject(new DOMException('Aborted', 'AbortError'));
-      const id = setTimeout(resolve, ms);
-      signal?.addEventListener('abort', () => { clearTimeout(id); reject(new DOMException('Aborted','AbortError')); }, { once: true });
+  function buildButtons(){
+    els.dirBtns.innerHTML = '';
+    const rows = [[],[],[]];
+    allDirections.forEach(d=>rows[d.row].push(d));
+    rows.forEach(r => {
+      const rowDiv=document.createElement('div');
+      rowDiv.className='dir-row';
+      r.forEach(d=>{
+        const btn=document.createElement('button');
+        btn.className='direction-btn active';
+        btn.dataset.key=d.key;
+        const img=document.createElement('img');
+        img.src=`images/${d.key}.png`; img.alt=d.name;
+        btn.appendChild(img);
+        btn.onclick=()=>{ selected[d.key]=!selected[d.key]; btn.classList.toggle('active',selected[d.key]); };
+        rowDiv.appendChild(btn);
+      });
+      els.dirBtns.appendChild(rowDiv);
     });
   }
 
-  function say(text, signal, rate = 1.3) {
-    return new Promise((resolve) => {
-      if (!('speechSynthesis' in window) || !text) return resolve();
-      try { speechSynthesis.cancel(); } catch(e){}
-      const u = new SpeechSynthesisUtterance(text);
-      u.rate = rate; u.volume = 1;
-      const done = () => resolve();
-      u.onend = done; u.onerror = done;
-      speechSynthesis.speak(u);
-      if (signal) {
-        const onAbort = () => { try { speechSynthesis.cancel(); } catch(e){} done(); };
-        signal.addEventListener('abort', onAbort, { once: true });
-      }
-    });
-  }
+  function preloadImages(){ allDirections.forEach(d=>{const im=new Image(); im.src=`images/${d.key}.png`;}); }
 
-  function validateInputs() {
-    const defs = [
-      { id: 'setsInput',     label: 'Number of Sets',       min: 1 },
-      { id: 'movesInput',    label: 'Moves per Set',        min: 1 },
-      { id: 'secondsInput',  label: 'Reaction Time (s)',    min: 0.1 },
-      { id: 'moveBreakInput',label: 'Reposition Time (s)',  min: 0 },
-      { id: 'setBreakInput', label: 'Rest Between Sets (s)',min: 0 },
-    ];
-    for (const d of defs) {
-      const el = document.getElementById(d.id);
-      const val = el.value.trim();
-      if (val === '') return `${d.label} is required.`;
-      const num = parseFloat(val);
-      if (isNaN(num) || num < d.min) return `${d.label} must be ${d.min === 0 ? '≥ 0' : `≥ ${d.min}`}.`;
+  function validate(){
+    const defs=[['setsInput','Number of Sets',1],['movesInput','Moves per Set',1],['secondsInput','Reaction Time (s)',0.1],['moveBreakInput','Reposition Time (s)',0],['setBreakInput','Rest Between Sets (s)',0]];
+    for(const [id,label,min] of defs){
+      const val=document.getElementById(id).value.trim();
+      if(!val) return `${label} is required.`;
+      const n=parseFloat(val); if(isNaN(n)||n<min) return `${label} must be ≥ ${min}.`;
     }
-    if (!Object.values(selectedDirections).some(Boolean)) return 'Please select at least one direction!';
+    if(!Object.values(selected).some(Boolean)) return 'Select at least one direction!';
     return '';
   }
 
-  function buildDirectionButtons() {
-    els.directionButtons.innerHTML = '';
-    allDirections.forEach(dir => {
-      const btn = document.createElement('button');
-      btn.className = 'direction-btn active';
-      btn.setAttribute('data-key', dir.key);
-      const img = document.createElement('img');
-      img.src = `images/${dir.key}.png`;
-      img.alt = dir.name;
-      btn.appendChild(img);
-      btn.onclick = () => {
-        const on = !(selectedDirections[dir.key]);
-        selectedDirections[dir.key] = on;
-        btn.classList.toggle('active', on);
-        // swap to faded if you have them; otherwise keep same icon
-        // img.src = on ? `images/${dir.key}.png` : `images/f_${dir.key}.png`;
-        play(sounds.click);
-      };
-      els.directionButtons.appendChild(btn);
-    });
-  }
+  function sleep(ms,signal){ return new Promise((res,rej)=>{ if(signal?.aborted) return rej(); const id=setTimeout(res,ms); signal?.addEventListener('abort',()=>{clearTimeout(id);rej();},{once:true}); }); }
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
-  function preloadImages() {
-    const toLoad = [];
-    allDirections.forEach(d => {
-      toLoad.push(`images/${d.key}.png`);
-      // toLoad.push(`images/f_${d.key}.png`); // if you actually have faded versions
-    });
-    toLoad.forEach(src => { const im = new Image(); im.src = src; });
-  }
+  async function run(){
+    const err=validate(); if(err){ els.error.textContent='⚠️ '+err; return; }
+    els.error.textContent='';
+    const totalSets=+document.getElementById('setsInput').value;
+    const movesPerSet=+document.getElementById('movesInput').value;
+    const secondsPerMove=+document.getElementById('secondsInput').value;
+    const breakPerMove=+document.getElementById('moveBreakInput').value;
+    const breakPerSet=+document.getElementById('setBreakInput').value;
 
-  async function runDrill() {
-    const err = validateInputs();
-    if (err) { els.error.textContent = '⚠️ ' + err; return; }
-    els.error.textContent = '';
+    const enabled=allDirections.filter(d=>selected[d.key]);
+    controller=new AbortController(); const {signal}=controller;
+    els.config.style.display='none'; els.drill.classList.add('active'); els.start.disabled=true;
 
-    const totalSets   = parseInt(document.getElementById('setsInput').value);
-    const movesPerSet = parseInt(document.getElementById('movesInput').value);
-    const secondsPerMove = parseFloat(document.getElementById('secondsInput').value);
-    const breakPerMove   = parseFloat(document.getElementById('moveBreakInput').value);
-    const breakPerSet    = Math.max(0, Math.round(parseFloat(document.getElementById('setBreakInput').value)));
-    const motivationOn   = els.motivationCheckbox.checked;
-
-    running = true;
-    aborter = new AbortController();
-    const { signal } = aborter;
-
-    els.config.classList.add('hide');
-    els.drillView.classList.add('active');
-    els.startBtn.disabled = true;
-    els.status.textContent = '';
-    els.direction.textContent = '';
-    els.countdown.textContent = '';
-    els.image.src = '';
-
-    try {
-      const enabledList = allDirections.filter(d => selectedDirections[d.key]);
-
-      for (let setIdx = 1; setIdx <= totalSets; setIdx++) {
-        for (let move = 1; move <= movesPerSet; move++) {
-          const step = pickRandom(enabledList);
-          els.direction.style.display = 'block';
-          els.image.style.display = 'block';
-          els.direction.textContent = step.name;
-          els.image.src = `images/${step.key}.png`;
-          els.countdown.textContent = '';
-
-          play(sounds.beep);
-          await sleep(60, signal); // tiny buffer so TTS doesn't cut beep
-          await say(step.name, signal, 1.3);
-
-          await sleep(secondsPerMove * 1000, signal);
-
-          // Hide between moves
-          els.direction.style.display = 'none';
-          els.image.style.display = 'none';
-          play(sounds.bonk);
-          if (breakPerMove > 0) await sleep(breakPerMove * 1000, signal);
+    try{
+      for(let s=1;s<=totalSets;s++){
+        for(let m=1;m<=movesPerSet;m++){
+          const step=pick(enabled);
+          els.direction.textContent=step.name;
+          els.image.src=`images/${step.key}.png`;
+          await sleep(secondsPerMove*1000,signal);
+          els.direction.textContent=''; els.image.src='';
+          if(breakPerMove>0) await sleep(breakPerMove*1000,signal);
         }
-
-        if (setIdx < totalSets) {
-          els.direction.style.display = 'block';
-          els.direction.textContent = 'Break between sets';
-          els.image.style.display = 'none';
-
-          // integer countdown with beep
-          for (let t = breakPerSet; t > 0; t--) {
-            els.countdown.textContent = String(t);
-            play(sounds.beep);
-            await sleep(1000, signal);
-          }
-          els.countdown.textContent = '';
-
-          if (motivationOn) {
-            const msg = pickRandom(motivationalLines);
-            if (msg.audio) {
-              try {
-                const ad = new Audio(msg.audio); ad.preload = 'auto';
-                await ad.play();
-              } catch {
-                await say(msg.label || 'Keep going!', signal);
-              }
-            } else {
-              await say(msg.text, signal);
-            }
-          }
+        if(s<totalSets){
+          els.direction.textContent='Rest';
+          await sleep(breakPerSet*1000,signal);
+          els.direction.textContent='';
         }
       }
-
-      els.countdown.textContent = 'Drill Complete!';
-      await say('Drill complete! Good job!', signal);
-    } catch (e) {
-      // Swallow aborts quietly
-    } finally {
-      cleanupToConfig();
-    }
+      els.countdown.textContent='Drill Complete!';
+    }catch{}
+    finally{ stop(); }
   }
 
-  function cleanupToConfig() {
-    running = false;
-    try { speechSynthesis.cancel(); } catch(e){}
-    els.drillView.classList.remove('active');
-    els.config.classList.remove('hide');
-    els.startBtn.disabled = false;
-    els.direction.textContent = '';
-    els.status.textContent = '';
-    els.image.src = '';
-    els.countdown.textContent = '';
-  }
+  function stop(){ controller?.abort(); controller=null; els.start.disabled=false; els.drill.classList.remove('active'); els.config.style.display='block'; els.direction.textContent=''; els.countdown.textContent=''; els.image.src=''; }
 
-  // ----------- Event wiring -----------
-  buildDirectionButtons();
-  preloadImages();
-
-  // Unlock audio on first interaction to avoid autoplay blocks
-  function unlockAudioOnce() {
-    for (const a of Object.values(sounds)) { try { a.play().then(()=>a.pause()).catch(()=>{}); } catch(e){} }
-    document.removeEventListener('click', unlockAudioOnce);
-    document.removeEventListener('touchstart', unlockAudioOnce);
-  }
-  document.addEventListener('click', unlockAudioOnce, { once: true });
-  document.addEventListener('touchstart', unlockAudioOnce, { once: true });
-
-  els.startBtn.addEventListener('click', () => {
-    if (running) return;
-    runDrill();
-  });
-
-  els.stopBtn.addEventListener('click', () => {
-    if (!running) return cleanupToConfig();
-    aborter?.abort();
-  });
+  buildButtons(); preloadImages();
+  els.start.onclick=run; els.stop.onclick=stop;
 </script>
 </body>
 </html>
