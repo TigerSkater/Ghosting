@@ -49,7 +49,7 @@
   <div id="drillView">
     <div id="direction"></div>
     <div id="countdown"></div>
-    <img id="image" src="" alt="Direction">
+    <img id="image" src="" alt="Direction" style="display:none;">
     <button id="stopBtn">Stop</button>
   </div>
 
@@ -62,6 +62,10 @@
     { name: 'Back Left',   key: 'back-left',   row:2 },
     { name: 'Back Right',  key: 'back-right',  row:2 }
   ];
+
+  // === Minimal, with simple beeps only ===
+  const beep = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+  beep.preload = 'auto';
 
   const selected = Object.fromEntries(allDirections.map(d => [d.key, true]));
   const els = {
@@ -115,6 +119,15 @@
   function sleep(ms,signal){ return new Promise((res,rej)=>{ if(signal?.aborted) return rej(); const id=setTimeout(res,ms); signal?.addEventListener('abort',()=>{clearTimeout(id);rej();},{once:true}); }); }
   function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
+  // Unlock audio on first interaction to avoid autoplay blocks
+  function unlockAudioOnce(){
+    try { beep.play().then(()=>beep.pause()).catch(()=>{}); } catch(e){}
+    document.removeEventListener('click', unlockAudioOnce);
+    document.removeEventListener('touchstart', unlockAudioOnce);
+  }
+  document.addEventListener('click', unlockAudioOnce, { once: true });
+  document.addEventListener('touchstart', unlockAudioOnce, { once: true });
+
   async function run(){
     const err=validate(); if(err){ els.error.textContent='⚠️ '+err; return; }
     els.error.textContent='';
@@ -132,16 +145,26 @@
       for(let s=1;s<=totalSets;s++){
         for(let m=1;m<=movesPerSet;m++){
           const step=pick(enabled);
+          // SHOW phase: set src, show image, beep
           els.direction.textContent=step.name;
+          els.image.style.display='block';
           els.image.src=`images/${step.key}.png`;
+          try{ beep.currentTime=0; beep.play(); }catch(e){}
           await sleep(secondsPerMove*1000,signal);
-          els.direction.textContent=''; els.image.src='';
+
+          // HIDE phase: remove src, hide image, beep
+          els.direction.textContent='';
+          els.image.removeAttribute('src');
+          els.image.style.display='none';
+          try{ beep.currentTime=0; beep.play(); }catch(e){}
           if(breakPerMove>0) await sleep(breakPerMove*1000,signal);
         }
         if(s<totalSets){
-          els.direction.textContent='Rest';
-          await sleep(breakPerSet*1000,signal);
-          els.direction.textContent='';
+          // Silent set break with periodic beeps each second to keep tempo without images
+          for(let t=breakPerSet; t>0; t--){
+            try{ beep.currentTime=0; beep.play(); }catch(e){}
+            await sleep(1000,signal);
+          }
         }
       }
       els.countdown.textContent='Drill Complete!';
@@ -149,7 +172,7 @@
     finally{ stop(); }
   }
 
-  function stop(){ controller?.abort(); controller=null; els.start.disabled=false; els.drill.classList.remove('active'); els.config.style.display='block'; els.direction.textContent=''; els.countdown.textContent=''; els.image.src=''; }
+  function stop(){ controller?.abort(); controller=null; els.start.disabled=false; els.drill.classList.remove('active'); els.config.style.display='block'; els.direction.textContent=''; els.countdown.textContent=''; els.image.removeAttribute('src'); els.image.style.display='none'; }
 
   buildButtons(); preloadImages();
   els.start.onclick=run; els.stop.onclick=stop;
