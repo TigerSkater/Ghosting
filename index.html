@@ -90,6 +90,11 @@
       transition:background .4s ease, border .4s ease;
     }
 
+    .calculator-box,
+    #progressSection{
+      display:none;
+    }
+
     .code-box label{
       display:block;
       font-weight:800;
@@ -286,10 +291,6 @@
       font-weight:700; 
       min-height:1.2em; 
       margin-top:6px; 
-    }
-
-    #progressSection{
-      display:none;
     }
 
     #progressSection p{
@@ -593,6 +594,8 @@
       setBreakInput: document.getElementById('setBreakInput'),
       distanceInput: document.getElementById('distanceInput'),
 
+      calculatorBox: document.querySelector('.calculator-box'),
+
       speedMetric: document.getElementById('speedMetric'),
       movesMetric: document.getElementById('movesMetric'),
       activeMetric: document.getElementById('activeMetric'),
@@ -885,6 +888,7 @@
 
     function showSofiaExtras(){
       document.body.classList.add('sofia-mode');
+      els.calculatorBox.style.display = 'block';
       els.progressSection.style.display = 'block';
 
       renderProgressRows();
@@ -895,7 +899,7 @@
     function applyTrainingCode(){
       const code = els.codeInput.value.trim().toLowerCase();
 
-      if(code === 'sofia'){
+      if(code === 'sofiahtang'){
         els.setsInput.value = 10;
         els.movesInput.value = 12;
         els.secondsInput.value = 3;
@@ -921,6 +925,7 @@
 
       } else {
         els.welcome.style.display = 'none';
+        els.calculatorBox.style.display = 'none';
         els.progressSection.style.display = 'none';
         document.body.classList.remove('sofia-mode');
         els.error.textContent = '⚠️ Invalid code. Try again.';
@@ -1113,7 +1118,6 @@
 
     buildButtons();
     preloadImages();
-    calculatePerformance();
 
     [
       els.setsInput,
