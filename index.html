@@ -569,6 +569,8 @@
   </div>
 
   <script>
+    const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxtmitu5p3d1bA45VNqj_Bh26YWf71oGINgZg6g7wwM-e4-EKgSbVwwPtQdc9FAhj0R/exec';
+
     const allDirections = [
       { name: 'Front Left',  key: 'front-left',  row:0 },
       { name: 'Front Right', key: 'front-right', row:0 },
@@ -635,6 +637,24 @@
     let skipBreakRequested = false;
     let progressChart = null;
     let ratingChart = null;
+
+    async function saveToGoogleSheets(payload){
+      try{
+        await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        return true;
+      } catch(e){
+        console.error('Google Sheets save failed:', e);
+        return false;
+      }
+    }
 
     function buildButtons(){
       els.dirBtns.innerHTML = '';
@@ -803,10 +823,22 @@
 
       localStorage.setItem('sofiaGhostingProfile', JSON.stringify(profile));
 
+      saveToGoogleSheets({
+        type: 'profile',
+        sets: profile.sets,
+        movesPerSet: profile.movesPerSet,
+        reactionTime: profile.reactionTime,
+        repositionTime: profile.repositionTime,
+        restBetweenSets: profile.restBetweenSets,
+        distanceToBall: profile.distanceToBall,
+        rating: profile.rating,
+        notes: 'Saved Sofia profile'
+      });
+
       els.welcome.style.display = 'block';
       els.welcome.innerHTML = `
         <span class="sparkle">💜 Sofia profile saved 💜</span><br>
-        These numbers will auto-load next time you enter your code.
+        Saved locally and sent to Google Sheets.
       `;
 
       calculatePerformance();
@@ -1130,21 +1162,39 @@
         day: 'numeric'
       });
 
+      const notes = `${current.totalMoves} moves · ${current.staminaLabel} · ${current.workRatio.toFixed(0)}% work`;
+
       data.push({
         month: label,
         speed: Number(current.speed.toFixed(2)),
         rating: rating,
-        notes: `${current.totalMoves} moves · ${current.staminaLabel} · ${current.workRatio.toFixed(0)}% work`
+        notes: notes
       });
 
       saveProgressData(data);
       renderProgressRows();
       renderAllCharts();
 
+      saveToGoogleSheets({
+        type: 'progress',
+        sets: getNumber(els.setsInput),
+        movesPerSet: getNumber(els.movesInput),
+        reactionTime: getNumber(els.secondsInput),
+        repositionTime: getNumber(els.moveBreakInput),
+        restBetweenSets: getNumber(els.setBreakInput),
+        distanceToBall: getNumber(els.distanceInput),
+        speed: Number(current.speed.toFixed(2)),
+        totalMoves: current.totalMoves,
+        workRatio: Number(current.workRatio.toFixed(0)),
+        stamina: current.staminaLabel,
+        rating: rating,
+        notes: notes
+      });
+
       els.welcome.style.display = 'block';
       els.welcome.innerHTML = `
         <span class="sparkle">📈 Progress saved</span><br>
-        Added ${current.speed.toFixed(2)} m/s with rating ${rating}/10.
+        Added ${current.speed.toFixed(2)} m/s with rating ${rating}/10 and sent it to Google Sheets.
       `;
     }
 
