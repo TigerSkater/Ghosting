@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Squash Ghosting Drill</title>
 
-  <!-- Restored font -->
   <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 
   <style>
@@ -31,7 +30,6 @@
       margin:0 0 12px; 
     }
 
-    /* Floating ghost */
     #floatingGhost{ 
       position:fixed; 
       top:20px; 
@@ -52,6 +50,70 @@
     #configContainer{ 
       max-width:560px; 
       margin:0 auto; 
+    }
+
+    .code-box{
+      background:#fff8fb;
+      border:2px solid #e8b4c7;
+      border-radius:16px;
+      padding:16px;
+      margin:12px 0 18px;
+      box-shadow:0 6px 18px rgba(114,47,55,0.12);
+    }
+
+    .code-box label{
+      display:block;
+      font-weight:800;
+      color:#722f37;
+      margin-bottom:8px;
+    }
+
+    .code-row{
+      display:flex;
+      gap:8px;
+      justify-content:center;
+      align-items:center;
+    }
+
+    #codeInput{
+      flex:1;
+      padding:10px 12px;
+      border:1px solid #ccc;
+      border-radius:10px;
+      font-size:1rem;
+    }
+
+    #applyCodeBtn{
+      margin-top:0;
+      white-space:nowrap;
+    }
+
+    #welcomeMessage{
+      display:none;
+      margin-top:12px;
+      padding:12px;
+      border-radius:14px;
+      background:linear-gradient(135deg, #fff0f6, #f3e8ff);
+      color:#722f37;
+      font-weight:900;
+      font-size:1.2rem;
+      animation:popIn .45s ease;
+      box-shadow:0 4px 12px rgba(142,68,173,0.18);
+    }
+
+    @keyframes popIn{
+      0%{ transform:scale(.8); opacity:0; }
+      70%{ transform:scale(1.05); opacity:1; }
+      100%{ transform:scale(1); opacity:1; }
+    }
+
+    .sparkle{
+      animation:sparkle 1.2s ease-in-out infinite alternate;
+    }
+
+    @keyframes sparkle{
+      from{ text-shadow:0 0 4px #fff; }
+      to{ text-shadow:0 0 10px #e879f9, 0 0 18px #f9a8d4; }
     }
 
     .row{ 
@@ -155,20 +217,20 @@
     }
 
     #direction{ 
-      font-size:3rem; 
-      font-weight:900; 
-      color:var(--ink); 
-      margin:10px 0; 
-      min-height:2.6rem; 
-    }
+  font-size:4.5rem; 
+  font-weight:900; 
+  color:var(--ink); 
+  margin:10px 0; 
+  min-height:5rem; 
+  }
 
     #countdown{ 
-      font-size:5.5rem; 
-      font-weight:900;
-      color:var(--accent); 
-      min-height:6rem; 
-      line-height:1;
-    }
+  font-size:8rem; 
+  font-weight:900;
+  color:var(--accent); 
+  min-height:8.5rem; 
+  line-height:1;
+  }
 
     #image{ 
       width:85vw; 
@@ -187,7 +249,6 @@
       margin-left:8px;
     }
 
-    /* End page */
     #endView{ 
       display:none; 
       max-width:720px; 
@@ -219,6 +280,18 @@
   <h1>Squash Ghosting Drill</h1>
 
   <div id="configContainer">
+
+    <div class="code-box">
+      <label for="codeInput">Enter Training Code</label>
+
+      <div class="code-row">
+        <input type="text" id="codeInput" placeholder="Enter code">
+        <button id="applyCodeBtn">Apply Code</button>
+      </div>
+
+      <div id="welcomeMessage"></div>
+    </div>
+
     <div class="row">
       <label for="setsInput">Number of Sets</label>
       <input type="number" id="setsInput" min="1" step="1" placeholder="e.g., 3">
@@ -244,7 +317,6 @@
       <input type="number" id="setBreakInput" min="0" step="1" placeholder="e.g., 20">
     </div>
 
-    <!-- Three-row layout: Front, Side, Back -->
     <div class="direction-grid" id="directionButtons"></div>
 
     <button id="startBtn">Start Drill</button>
@@ -297,7 +369,10 @@
       stop: document.getElementById('stopBtn'),
       restart: document.getElementById('restartBtn'),
       skipBreak: document.getElementById('skipBreakBtn'),
-      error: document.getElementById('error-message')
+      error: document.getElementById('error-message'),
+      codeInput: document.getElementById('codeInput'),
+      applyCode: document.getElementById('applyCodeBtn'),
+      welcome: document.getElementById('welcomeMessage')
     };
 
     let controller = null;
@@ -351,6 +426,36 @@
       });
     }
 
+    function applyTrainingCode(){
+      const code = els.codeInput.value.trim().toLowerCase();
+
+      if(code === 'sofiatang'){
+        document.getElementById('setsInput').value = 10;
+        document.getElementById('movesInput').value = 12;
+        document.getElementById('secondsInput').value = 3;
+        document.getElementById('moveBreakInput').value = 0.2;
+        document.getElementById('setBreakInput').value = 45;
+
+        els.error.textContent = '';
+
+        els.welcome.style.display = 'block';
+        els.welcome.innerHTML = `
+          <span class="sparkle">✨ Welcome back, Sofia ✨</span><br>
+          Elite ghosting mode activated: 10 sets · 12 moves · 3s reaction · 0.2s reset · 45s rest
+        `;
+
+        els.applyCode.textContent = 'Code Applied ✓';
+
+        setTimeout(() => {
+          els.applyCode.textContent = 'Apply Code';
+        }, 1800);
+
+      } else {
+        els.welcome.style.display = 'none';
+        els.error.textContent = '⚠️ Invalid code. Try again.';
+      }
+    }
+
     function validate(){
       const defs = [
         ['setsInput', 'Number of Sets', 1],
@@ -402,7 +507,6 @@
       skipBreakRequested = true;
     }
 
-    // Unlock audio on first interaction
     function unlockAudioOnce(){
       try{
         beep.play()
@@ -450,7 +554,6 @@
           for(let m = 1; m <= movesPerSet; m++){
             const step = pick(enabled);
 
-            // Show direction
             els.direction.textContent = step.name;
             els.countdown.textContent = '';
             els.image.src = `images/${step.key}.png`;
@@ -463,7 +566,6 @@
 
             await sleep(secondsPerMove * 1000, signal);
 
-            // Hide direction for reposition time
             els.direction.textContent = '';
             els.image.removeAttribute('src');
             els.image.style.display = 'none';
@@ -478,7 +580,6 @@
             }
           }
 
-          // Rest between sets
           if(s < totalSets){
             els.setStatus.textContent = `Break after Set ${s}`;
             els.direction.textContent = 'Rest';
@@ -504,7 +605,6 @@
           }
         }
 
-        // End page
         els.drill.classList.remove('active');
         els.end.classList.add('active');
         els.setStatus.textContent = '';
@@ -545,6 +645,13 @@
     els.stop.onclick = stop;
     els.restart.onclick = restart;
     els.skipBreak.onclick = skipBreak;
+    els.applyCode.onclick = applyTrainingCode;
+
+    els.codeInput.addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){
+        applyTrainingCode();
+      }
+    });
   </script>
 </body>
 </html>
