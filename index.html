@@ -293,7 +293,7 @@
 
     .progress-row{
       display:grid;
-      grid-template-columns:1fr .8fr .7fr 1.5fr auto;
+      grid-template-columns:1fr .8fr .8fr 1.5fr auto;
       gap:8px;
       margin:8px 0;
       align-items:center;
@@ -475,8 +475,13 @@
     </div>
 
     <div class="row">
-      <label for="ratingInput">Session Rating (1–10)</label>
-      <input type="number" id="ratingInput" min="1" max="10" step="1" placeholder="e.g., 8">
+      <label for="ratingInput">Universal Squash Rating</label>
+      <input type="number" id="ratingInput" min="0" step="0.01" placeholder="e.g., 4.25">
+    </div>
+
+    <div class="row">
+      <label for="dateInput">Progress Date</label>
+      <input type="date" id="dateInput">
     </div>
 
     <div class="calculator-box">
@@ -524,7 +529,7 @@
 
     <div id="progressSection">
       <h2>📈 Sofia’s Progress</h2>
-      <p>Speed is auto-calculated. Rating helps you see whether better speed matches better session feel.</p>
+      <p>Speed is auto-calculated. Universal Squash Rating helps compare real squash progress with ghosting speed.</p>
 
       <div id="progressRows"></div>
 
@@ -538,7 +543,7 @@
       </div>
 
       <div class="chart-card">
-        <h3>Rating Correlation Chart</h3>
+        <h3>Universal Squash Rating Correlation Chart</h3>
         <canvas id="ratingChart"></canvas>
         <div id="correlationText">Correlation: —</div>
       </div>
@@ -613,6 +618,7 @@
       setBreakInput: document.getElementById('setBreakInput'),
       distanceInput: document.getElementById('distanceInput'),
       ratingInput: document.getElementById('ratingInput'),
+      dateInput: document.getElementById('dateInput'),
 
       calculatorBox: document.querySelector('.calculator-box'),
 
@@ -719,10 +725,22 @@
       return isNaN(n) ? 0 : n;
     }
 
-    function clampRating(value){
-      if(value < 1) return 1;
-      if(value > 10) return 10;
-      return value;
+    function cleanRating(value){
+      if(value < 0) return 0;
+      return Number(value.toFixed(2));
+    }
+
+    function getProgressDateLabel(){
+      if(els.dateInput.value){
+        return els.dateInput.value;
+      }
+
+      const today = new Date();
+
+      return today.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric'
+      });
     }
 
     function calculatePerformance(){
@@ -790,7 +808,8 @@
         repositionTime: 0.2,
         restBetweenSets: 45,
         distanceToBall: 4.5,
-        rating: 8
+        rating: 4.00,
+        progressDate: ''
       };
     }
 
@@ -809,7 +828,7 @@
     }
 
     function saveSofiaProfile(){
-      const rating = clampRating(getNumber(els.ratingInput));
+      const rating = cleanRating(getNumber(els.ratingInput));
 
       const profile = {
         sets: getNumber(els.setsInput),
@@ -818,7 +837,8 @@
         repositionTime: getNumber(els.moveBreakInput),
         restBetweenSets: getNumber(els.setBreakInput),
         distanceToBall: getNumber(els.distanceInput),
-        rating: rating
+        rating: rating,
+        progressDate: els.dateInput.value
       };
 
       localStorage.setItem('sofiaGhostingProfile', JSON.stringify(profile));
@@ -832,7 +852,8 @@
         restBetweenSets: profile.restBetweenSets,
         distanceToBall: profile.distanceToBall,
         rating: profile.rating,
-        notes: 'Saved Sofia profile'
+        notes: 'Saved Sofia profile',
+        progressDate: profile.progressDate
       });
 
       els.welcome.style.display = 'block';
@@ -853,7 +874,8 @@
       els.moveBreakInput.value = profile.repositionTime;
       els.setBreakInput.value = profile.restBetweenSets;
       els.distanceInput.value = profile.distanceToBall;
-      els.ratingInput.value = profile.rating || 8;
+      els.ratingInput.value = profile.rating || 4.00;
+      els.dateInput.value = profile.progressDate || '';
 
       calculatePerformance();
     }
@@ -870,6 +892,7 @@
       els.setBreakInput.value = profile.restBetweenSets;
       els.distanceInput.value = profile.distanceToBall;
       els.ratingInput.value = profile.rating;
+      els.dateInput.value = profile.progressDate;
 
       calculatePerformance();
 
@@ -882,9 +905,9 @@
 
     function defaultProgressData(){
       return [
-        { month: 'Jun 1', speed: 1.20, rating: 6, notes: 'Starting point' },
-        { month: 'Jul 1', speed: 1.35, rating: 7, notes: 'Better movement' },
-        { month: 'Aug 1', speed: 1.50, rating: 8, notes: 'Goal pace' }
+        { month: '2026-06-01', speed: 1.20, rating: 4.00, notes: 'Starting point' },
+        { month: '2026-07-01', speed: 1.35, rating: 4.15, notes: 'Better movement' },
+        { month: '2026-08-01', speed: 1.50, rating: 4.25, notes: 'Goal pace' }
       ];
     }
 
@@ -897,7 +920,7 @@
           return data.map(item => ({
             month: item.month,
             speed: Number(item.speed),
-            rating: item.rating ? Number(item.rating) : 8,
+            rating: item.rating ? Number(item.rating) : 4.00,
             notes: item.notes || ''
           }));
         } catch(e){
@@ -923,7 +946,7 @@
         row.innerHTML = `
           <input type="text" value="${item.month}" placeholder="Date / Label" data-index="${index}" data-field="month">
           <input type="number" value="${item.speed}" step="0.01" placeholder="Speed m/s" data-index="${index}" data-field="speed">
-          <input type="number" value="${item.rating}" min="1" max="10" step="1" placeholder="Rating" data-index="${index}" data-field="rating">
+          <input type="number" value="${item.rating}" min="0" step="0.01" placeholder="USR" data-index="${index}" data-field="rating">
           <input type="text" value="${item.notes || ''}" placeholder="Notes" data-index="${index}" data-field="notes">
           <button type="button" data-delete="${index}">Delete</button>
         `;
@@ -962,7 +985,7 @@
         data.push({
           month,
           speed: isNaN(speed) ? 0 : speed,
-          rating: isNaN(rating) ? 0 : clampRating(rating),
+          rating: isNaN(rating) ? 0 : cleanRating(rating),
           notes
         });
       });
@@ -1075,7 +1098,7 @@
         type: 'scatter',
         data: {
           datasets: [{
-            label: 'Rating vs Speed',
+            label: 'Universal Squash Rating vs Speed',
             data: points,
             pointRadius: 6,
             pointHoverRadius: 8
@@ -1089,7 +1112,7 @@
               callbacks: {
                 label: function(context){
                   const point = context.raw;
-                  return `${point.label}: ${point.x} m/s, rating ${point.y}/10`;
+                  return `${point.label}: ${point.x} m/s, USR ${point.y}`;
                 }
               }
             }
@@ -1102,11 +1125,9 @@
               }
             },
             y: {
-              min: 1,
-              max: 10,
               title: {
                 display: true,
-                text: 'Session rating'
+                text: 'Universal Squash Rating'
               }
             }
           }
@@ -1146,21 +1167,16 @@
       let rating = getNumber(els.ratingInput);
 
       if(rating <= 0){
-        els.error.textContent = '⚠️ Add a session rating from 1 to 10.';
+        els.error.textContent = '⚠️ Add your Universal Squash Rating.';
         return;
       }
 
-      rating = clampRating(rating);
+      rating = cleanRating(rating);
       els.ratingInput.value = rating;
       els.error.textContent = '';
 
       const data = getProgressData();
-      const today = new Date();
-
-      const label = today.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric'
-      });
+      const label = getProgressDateLabel();
 
       const notes = `${current.totalMoves} moves · ${current.staminaLabel} · ${current.workRatio.toFixed(0)}% work`;
 
@@ -1188,13 +1204,14 @@
         workRatio: Number(current.workRatio.toFixed(0)),
         stamina: current.staminaLabel,
         rating: rating,
-        notes: notes
+        notes: notes,
+        progressDate: label
       });
 
       els.welcome.style.display = 'block';
       els.welcome.innerHTML = `
         <span class="sparkle">📈 Progress saved</span><br>
-        Added ${current.speed.toFixed(2)} m/s with rating ${rating}/10 and sent it to Google Sheets.
+        Added ${current.speed.toFixed(2)} m/s with USR ${rating} and sent it to Google Sheets.
       `;
     }
 
