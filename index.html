@@ -127,6 +127,10 @@
       white-space:nowrap;
     }
 
+    #sofiaStartSlot{
+      margin-top:10px;
+    }
+
     #welcomeMessage{
       display:none;
       margin-top:12px;
@@ -179,12 +183,38 @@
       border-radius:8px; 
     }
 
-    .calculator-box h2,
-    #progressSection h2{
+    .collapsible-card{
+      background:var(--card);
+      border:2px solid var(--border);
+      border-radius:18px;
+      padding:16px;
+      margin:12px 0 18px;
+      box-shadow:0 6px 18px rgba(114,47,55,0.12);
+      transition:background .4s ease, border .4s ease;
+      text-align:center;
+    }
+
+    .collapsible-card > summary{
+      cursor:pointer;
+      list-style:none;
       font-family:'Dancing Script', cursive;
       font-size:2.3rem;
+      font-weight:800;
       color:var(--title);
-      margin:0 0 8px;
+    }
+
+    .collapsible-card > summary::-webkit-details-marker{
+      display:none;
+    }
+
+    .collapsible-card > summary::after{
+      content:"  ▾";
+      font-family:system-ui, sans-serif;
+      font-size:1rem;
+    }
+
+    .collapsible-card[open] > summary::after{
+      content:"  ▴";
     }
 
     .metric-grid{
@@ -231,7 +261,7 @@
       grid-template-rows:repeat(3,auto); 
       gap:12px; 
       justify-content:center; 
-      margin-top:16px; 
+      margin:16px 0; 
     }
 
     .dir-row{ 
@@ -317,9 +347,29 @@
       border:1px solid #eee;
     }
 
-    .sofia-inputs h3{
-      margin:0 0 10px;
+    .nested-details{
+      text-align:left;
+    }
+
+    .nested-details > summary{
+      cursor:pointer;
+      font-weight:900;
       color:var(--title);
+      text-align:center;
+      padding:6px;
+      list-style:none;
+    }
+
+    .nested-details > summary::-webkit-details-marker{
+      display:none;
+    }
+
+    .nested-details > summary::after{
+      content:"  ▾";
+    }
+
+    .nested-details[open] > summary::after{
+      content:"  ▴";
     }
 
     #clubLockerBulkInput{
@@ -493,7 +543,9 @@
 
   <div id="configContainer">
 
-    <button id="startBtn" class="top-start-btn">Start Drill</button>
+    <div id="homeStartSlot">
+      <button id="startBtn" class="top-start-btn">Start Drill</button>
+    </div>
 
     <div class="code-box">
       <label for="codeInput">Enter Training Code</label>
@@ -504,6 +556,8 @@
       </div>
 
       <div id="welcomeMessage"></div>
+
+      <div id="sofiaStartSlot"></div>
     </div>
 
     <div class="row">
@@ -531,8 +585,10 @@
       <input type="number" id="setBreakInput" min="0" step="1" placeholder="e.g., 45">
     </div>
 
-    <div class="calculator-box">
-      <h2>Performance Calculator</h2>
+    <div class="direction-grid" id="directionButtons"></div>
+
+    <details class="calculator-box collapsible-card">
+      <summary>Performance Calculator</summary>
       <p>These update automatically when you change your numbers.</p>
 
       <div class="metric-grid">
@@ -572,14 +628,14 @@
           <div class="metric-note">Light, moderate, hard, or intense</div>
         </div>
       </div>
-    </div>
+    </details>
 
-    <div id="progressSection">
-      <h2>📈 Sofia’s Progress</h2>
+    <details id="progressSection" class="collapsible-card">
+      <summary>📈 Sofia’s Progress</summary>
       <p>Track ghosting speed and Universal Squash Rating over time.</p>
 
-      <div class="sofia-inputs">
-        <h3>Current Ghosting Entry</h3>
+      <details class="sofia-inputs nested-details">
+        <summary>Current Ghosting Entry</summary>
 
         <div class="row">
           <label for="distanceInput">Average Distance to Ball (m)</label>
@@ -595,10 +651,10 @@
           <label for="dateInput">Progress Date</label>
           <input type="date" id="dateInput">
         </div>
-      </div>
+      </details>
 
-      <div class="sofia-inputs">
-        <h3>Enter Old Squash Rating</h3>
+      <details class="sofia-inputs nested-details">
+        <summary>Enter Old Squash Rating</summary>
 
         <div class="row">
           <label for="oldRatingDateInput">Old Rating Date</label>
@@ -611,17 +667,17 @@
         </div>
 
         <button id="addOldRatingBtn">Add Old Rating to Chart</button>
-      </div>
+      </details>
 
-      <div class="sofia-inputs">
-        <h3>Import ClubLocker Rating History</h3>
+      <details class="sofia-inputs nested-details">
+        <summary>Import ClubLocker Rating History</summary>
 
         <p>Paste the full ClubLocker rating history text here. The app will clean duplicates and use one rating per date.</p>
 
         <textarea id="clubLockerBulkInput" placeholder="Paste ClubLocker rating history here..."></textarea>
 
         <button id="importClubLockerBtn">Import ClubLocker History</button>
-      </div>
+      </details>
 
       <details class="history-details">
         <summary>Show / edit rating history</summary>
@@ -644,9 +700,7 @@
         <h3>Universal Squash Rating Progress</h3>
         <canvas id="ratingProgressChart"></canvas>
       </div>
-    </div>
-
-    <div class="direction-grid" id="directionButtons"></div>
+    </details>
 
     <div id="error-message"></div>
   </div>
@@ -728,6 +782,9 @@
 
     const els = {
       config: document.getElementById('configContainer'),
+      homeStartSlot: document.getElementById('homeStartSlot'),
+      sofiaStartSlot: document.getElementById('sofiaStartSlot'),
+
       drill: document.getElementById('drillView'),
       end: document.getElementById('endView'),
 
@@ -812,6 +869,14 @@
         els.sheetStatus.textContent = 'Google Sheets save failed. Check Apps Script deployment.';
         return false;
       }
+    }
+
+    function moveStartButtonToSofiaMode(){
+      els.sofiaStartSlot.appendChild(els.start);
+    }
+
+    function moveStartButtonToHomeMode(){
+      els.homeStartSlot.appendChild(els.start);
     }
 
     function buildButtons(){
@@ -1569,6 +1634,7 @@
 
       if(code === 'sofiahtang'){
         loadSofiaProfile();
+        moveStartButtonToSofiaMode();
 
         els.error.textContent = '';
 
@@ -1587,6 +1653,8 @@
         }, 1800);
 
       } else {
+        moveStartButtonToHomeMode();
+
         els.welcome.style.display = 'none';
         els.calculatorBox.style.display = 'none';
         els.progressSection.style.display = 'none';
