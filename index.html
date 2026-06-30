@@ -17,7 +17,6 @@
       --title:#722f37;
       --button:#b35a7a;
       --border:#e8b4c7;
-      --soft:#fff0f6;
     }
 
     body.sofia-mode{
@@ -28,12 +27,9 @@
       --title:#6d28d9;
       --button:#8b5cf6;
       --border:#c4b5fd;
-      --soft:#ede9fe;
     }
 
-    *{ 
-      box-sizing:border-box; 
-    }
+    *{ box-sizing:border-box; }
 
     body{ 
       background:var(--bg); 
@@ -74,7 +70,7 @@
     }
 
     #configContainer{ 
-      max-width:700px; 
+      max-width:720px; 
       margin:0 auto; 
     }
 
@@ -277,9 +273,7 @@
       transition:transform .15s ease, background .3s ease;
     }
 
-    button:hover{
-      transform:translateY(-1px);
-    }
+    button:hover{ transform:translateY(-1px); }
 
     button:disabled{ 
       opacity:.6; 
@@ -299,7 +293,7 @@
 
     .progress-row{
       display:grid;
-      grid-template-columns:1fr 1fr 1fr auto;
+      grid-template-columns:1fr .8fr .7fr 1.5fr auto;
       gap:8px;
       margin:8px 0;
       align-items:center;
@@ -312,11 +306,23 @@
       min-width:0;
     }
 
-    #progressChart{
-      margin-top:16px;
+    .chart-card{
       background:white;
-      border-radius:12px;
-      padding:10px;
+      border-radius:14px;
+      padding:12px;
+      margin-top:16px;
+      border:1px solid #eee;
+    }
+
+    .chart-card h3{
+      color:var(--title);
+      margin:0 0 8px;
+    }
+
+    #correlationText{
+      font-weight:800;
+      color:var(--accent);
+      margin-top:8px;
     }
 
     #drillView{ 
@@ -325,9 +331,7 @@
       margin:0 auto; 
     }
 
-    #drillView.active{ 
-      display:block; 
-    }
+    #drillView.active{ display:block; }
 
     #setStatus{
       font-size:1.4rem;
@@ -376,9 +380,7 @@
       margin:0 auto; 
     }
 
-    #endView.active{ 
-      display:block; 
-    }
+    #endView.active{ display:block; }
 
     #endView h2{ 
       font-family:'Dancing Script', cursive; 
@@ -472,6 +474,11 @@
       <input type="number" id="distanceInput" min="0.1" step="0.1" placeholder="e.g., 4.5">
     </div>
 
+    <div class="row">
+      <label for="ratingInput">Session Rating (1–10)</label>
+      <input type="number" id="ratingInput" min="1" max="10" step="1" placeholder="e.g., 8">
+    </div>
+
     <div class="calculator-box">
       <h2>Performance Calculator</h2>
       <p>These update automatically when you change your numbers.</p>
@@ -517,7 +524,7 @@
 
     <div id="progressSection">
       <h2>📈 Sofia’s Progress</h2>
-      <p>Chart is auto-calculated from your current drill settings. Higher m/s = faster.</p>
+      <p>Speed is auto-calculated. Rating helps you see whether better speed matches better session feel.</p>
 
       <div id="progressRows"></div>
 
@@ -525,7 +532,16 @@
       <button id="addProgressBtn">Add Current Stats to Chart</button>
       <button id="resetProfileBtn">Reset Sofia Profile</button>
 
-      <canvas id="progressChart"></canvas>
+      <div class="chart-card">
+        <h3>Speed Progress</h3>
+        <canvas id="progressChart"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <h3>Rating Correlation Chart</h3>
+        <canvas id="ratingChart"></canvas>
+        <div id="correlationText">Correlation: —</div>
+      </div>
     </div>
 
     <div class="direction-grid" id="directionButtons"></div>
@@ -594,6 +610,7 @@
       moveBreakInput: document.getElementById('moveBreakInput'),
       setBreakInput: document.getElementById('setBreakInput'),
       distanceInput: document.getElementById('distanceInput'),
+      ratingInput: document.getElementById('ratingInput'),
 
       calculatorBox: document.querySelector('.calculator-box'),
 
@@ -609,12 +626,15 @@
       addProgress: document.getElementById('addProgressBtn'),
       saveProfile: document.getElementById('saveProfileBtn'),
       resetProfile: document.getElementById('resetProfileBtn'),
-      progressChart: document.getElementById('progressChart')
+      progressChart: document.getElementById('progressChart'),
+      ratingChart: document.getElementById('ratingChart'),
+      correlationText: document.getElementById('correlationText')
     };
 
     let controller = null;
     let skipBreakRequested = false;
     let progressChart = null;
+    let ratingChart = null;
 
     function buildButtons(){
       els.dirBtns.innerHTML = '';
@@ -677,6 +697,12 @@
     function getNumber(el){
       const n = parseFloat(el.value);
       return isNaN(n) ? 0 : n;
+    }
+
+    function clampRating(value){
+      if(value < 1) return 1;
+      if(value > 10) return 10;
+      return value;
     }
 
     function calculatePerformance(){
@@ -743,7 +769,8 @@
         reactionTime: 3,
         repositionTime: 0.2,
         restBetweenSets: 45,
-        distanceToBall: 4.5
+        distanceToBall: 4.5,
+        rating: 8
       };
     }
 
@@ -762,13 +789,16 @@
     }
 
     function saveSofiaProfile(){
+      const rating = clampRating(getNumber(els.ratingInput));
+
       const profile = {
         sets: getNumber(els.setsInput),
         movesPerSet: getNumber(els.movesInput),
         reactionTime: getNumber(els.secondsInput),
         repositionTime: getNumber(els.moveBreakInput),
         restBetweenSets: getNumber(els.setBreakInput),
-        distanceToBall: getNumber(els.distanceInput)
+        distanceToBall: getNumber(els.distanceInput),
+        rating: rating
       };
 
       localStorage.setItem('sofiaGhostingProfile', JSON.stringify(profile));
@@ -791,6 +821,7 @@
       els.moveBreakInput.value = profile.repositionTime;
       els.setBreakInput.value = profile.restBetweenSets;
       els.distanceInput.value = profile.distanceToBall;
+      els.ratingInput.value = profile.rating || 8;
 
       calculatePerformance();
     }
@@ -806,6 +837,7 @@
       els.moveBreakInput.value = profile.repositionTime;
       els.setBreakInput.value = profile.restBetweenSets;
       els.distanceInput.value = profile.distanceToBall;
+      els.ratingInput.value = profile.rating;
 
       calculatePerformance();
 
@@ -818,9 +850,9 @@
 
     function defaultProgressData(){
       return [
-        { month: 'Jun 1', speed: 1.20, notes: 'Starting point' },
-        { month: 'Jul 1', speed: 1.35, notes: 'Better movement' },
-        { month: 'Aug 1', speed: 1.50, notes: 'Goal pace' }
+        { month: 'Jun 1', speed: 1.20, rating: 6, notes: 'Starting point' },
+        { month: 'Jul 1', speed: 1.35, rating: 7, notes: 'Better movement' },
+        { month: 'Aug 1', speed: 1.50, rating: 8, notes: 'Goal pace' }
       ];
     }
 
@@ -829,7 +861,13 @@
 
       if(saved){
         try{
-          return JSON.parse(saved);
+          const data = JSON.parse(saved);
+          return data.map(item => ({
+            month: item.month,
+            speed: Number(item.speed),
+            rating: item.rating ? Number(item.rating) : 8,
+            notes: item.notes || ''
+          }));
         } catch(e){
           return defaultProgressData();
         }
@@ -853,6 +891,7 @@
         row.innerHTML = `
           <input type="text" value="${item.month}" placeholder="Date / Label" data-index="${index}" data-field="month">
           <input type="number" value="${item.speed}" step="0.01" placeholder="Speed m/s" data-index="${index}" data-field="speed">
+          <input type="number" value="${item.rating}" min="1" max="10" step="1" placeholder="Rating" data-index="${index}" data-field="rating">
           <input type="text" value="${item.notes || ''}" placeholder="Notes" data-index="${index}" data-field="notes">
           <button type="button" data-delete="${index}">Delete</button>
         `;
@@ -873,7 +912,7 @@
 
           saveProgressData(data);
           renderProgressRows();
-          renderProgressChart();
+          renderAllCharts();
         });
       });
     }
@@ -885,17 +924,52 @@
       rows.forEach(row => {
         const month = row.querySelector('[data-field="month"]').value;
         const speed = parseFloat(row.querySelector('[data-field="speed"]').value);
+        const rating = parseFloat(row.querySelector('[data-field="rating"]').value);
         const notes = row.querySelector('[data-field="notes"]').value;
 
         data.push({
           month,
           speed: isNaN(speed) ? 0 : speed,
+          rating: isNaN(rating) ? 0 : clampRating(rating),
           notes
         });
       });
 
       saveProgressData(data);
-      renderProgressChart();
+      renderAllCharts();
+    }
+
+    function calculateCorrelation(data){
+      const clean = data.filter(item => Number(item.speed) > 0 && Number(item.rating) > 0);
+
+      if(clean.length < 2){
+        return null;
+      }
+
+      const xs = clean.map(item => Number(item.speed));
+      const ys = clean.map(item => Number(item.rating));
+
+      const meanX = xs.reduce((a,b) => a + b, 0) / xs.length;
+      const meanY = ys.reduce((a,b) => a + b, 0) / ys.length;
+
+      let numerator = 0;
+      let denomX = 0;
+      let denomY = 0;
+
+      for(let i = 0; i < xs.length; i++){
+        const dx = xs[i] - meanX;
+        const dy = ys[i] - meanY;
+
+        numerator += dx * dy;
+        denomX += dx * dx;
+        denomY += dy * dy;
+      }
+
+      if(denomX === 0 || denomY === 0){
+        return null;
+      }
+
+      return numerator / Math.sqrt(denomX * denomY);
     }
 
     function renderProgressChart(){
@@ -923,9 +997,7 @@
         options: {
           responsive: true,
           plugins: {
-            legend: {
-              display: true
-            },
+            legend: { display: true },
             tooltip: {
               callbacks: {
                 label: function(context){
@@ -953,6 +1025,84 @@
       });
     }
 
+    function renderRatingChart(){
+      const data = getProgressData();
+      const points = data
+        .filter(item => Number(item.speed) > 0 && Number(item.rating) > 0)
+        .map(item => ({
+          x: Number(item.speed),
+          y: Number(item.rating),
+          label: item.month
+        }));
+
+      if(ratingChart){
+        ratingChart.destroy();
+      }
+
+      ratingChart = new Chart(els.ratingChart, {
+        type: 'scatter',
+        data: {
+          datasets: [{
+            label: 'Rating vs Speed',
+            data: points,
+            pointRadius: 6,
+            pointHoverRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true },
+            tooltip: {
+              callbacks: {
+                label: function(context){
+                  const point = context.raw;
+                  return `${point.label}: ${point.x} m/s, rating ${point.y}/10`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Speed to ball (m/s)'
+              }
+            },
+            y: {
+              min: 1,
+              max: 10,
+              title: {
+                display: true,
+                text: 'Session rating'
+              }
+            }
+          }
+        }
+      });
+
+      const r = calculateCorrelation(data);
+
+      if(r === null){
+        els.correlationText.textContent = 'Correlation: add at least 2 varied entries';
+      } else {
+        let interpretation = 'weak';
+
+        if(Math.abs(r) >= 0.7){
+          interpretation = 'strong';
+        } else if(Math.abs(r) >= 0.4){
+          interpretation = 'moderate';
+        }
+
+        els.correlationText.textContent = `Correlation: r = ${r.toFixed(2)} (${interpretation})`;
+      }
+    }
+
+    function renderAllCharts(){
+      renderProgressChart();
+      renderRatingChart();
+    }
+
     function addProgressMonth(){
       const current = calculatePerformance();
 
@@ -961,6 +1111,15 @@
         return;
       }
 
+      let rating = getNumber(els.ratingInput);
+
+      if(rating <= 0){
+        els.error.textContent = '⚠️ Add a session rating from 1 to 10.';
+        return;
+      }
+
+      rating = clampRating(rating);
+      els.ratingInput.value = rating;
       els.error.textContent = '';
 
       const data = getProgressData();
@@ -974,17 +1133,18 @@
       data.push({
         month: label,
         speed: Number(current.speed.toFixed(2)),
+        rating: rating,
         notes: `${current.totalMoves} moves · ${current.staminaLabel} · ${current.workRatio.toFixed(0)}% work`
       });
 
       saveProgressData(data);
       renderProgressRows();
-      renderProgressChart();
+      renderAllCharts();
 
       els.welcome.style.display = 'block';
       els.welcome.innerHTML = `
         <span class="sparkle">📈 Progress saved</span><br>
-        Added ${current.speed.toFixed(2)} m/s to your chart.
+        Added ${current.speed.toFixed(2)} m/s with rating ${rating}/10.
       `;
     }
 
@@ -994,7 +1154,7 @@
       els.progressSection.style.display = 'block';
 
       renderProgressRows();
-      renderProgressChart();
+      renderAllCharts();
       calculatePerformance();
     }
 
