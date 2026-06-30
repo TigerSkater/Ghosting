@@ -29,7 +29,9 @@
       --border:#c4b5fd;
     }
 
-    *{ box-sizing:border-box; }
+    *{ 
+      box-sizing:border-box; 
+    }
 
     body{ 
       background:var(--bg); 
@@ -89,14 +91,6 @@
     .calculator-box,
     #progressSection{
       display:none;
-    }
-
-    .sofia-only{
-      display:none;
-    }
-
-    body.sofia-mode .sofia-only{
-      display:flex;
     }
 
     .code-box label{
@@ -281,7 +275,9 @@
       transition:transform .15s ease, background .3s ease;
     }
 
-    button:hover{ transform:translateY(-1px); }
+    button:hover{ 
+      transform:translateY(-1px); 
+    }
 
     button:disabled{ 
       opacity:.6; 
@@ -297,6 +293,14 @@
 
     #progressSection p{
       margin-top:0;
+    }
+
+    .sofia-inputs{
+      background:white;
+      border-radius:14px;
+      padding:12px;
+      margin:14px 0;
+      border:1px solid #eee;
     }
 
     .progress-row{
@@ -339,7 +343,9 @@
       margin:0 auto; 
     }
 
-    #drillView.active{ display:block; }
+    #drillView.active{ 
+      display:block; 
+    }
 
     #setStatus{
       font-size:1.4rem;
@@ -388,7 +394,9 @@
       margin:0 auto; 
     }
 
-    #endView.active{ display:block; }
+    #endView.active{ 
+      display:block; 
+    }
 
     #endView h2{ 
       font-family:'Dancing Script', cursive; 
@@ -477,21 +485,6 @@
       <input type="number" id="setBreakInput" min="0" step="1" placeholder="e.g., 45">
     </div>
 
-    <div class="row sofia-only">
-      <label for="distanceInput">Average Distance to Ball (m)</label>
-      <input type="number" id="distanceInput" min="0.1" step="0.1" placeholder="e.g., 4.5">
-    </div>
-
-    <div class="row sofia-only">
-      <label for="ratingInput">Universal Squash Rating</label>
-      <input type="number" id="ratingInput" min="0" step="0.01" placeholder="e.g., 4.25">
-    </div>
-
-    <div class="row sofia-only">
-      <label for="dateInput">Progress Date</label>
-      <input type="date" id="dateInput">
-    </div>
-
     <div class="calculator-box">
       <h2>Performance Calculator</h2>
       <p>These update automatically when you change your numbers.</p>
@@ -538,6 +531,23 @@
     <div id="progressSection">
       <h2>📈 Sofia’s Progress</h2>
       <p>Speed is auto-calculated. Universal Squash Rating helps compare real squash progress with ghosting speed.</p>
+
+      <div class="sofia-inputs">
+        <div class="row">
+          <label for="distanceInput">Average Distance to Ball (m)</label>
+          <input type="number" id="distanceInput" min="0.1" step="0.1" placeholder="e.g., 4.5">
+        </div>
+
+        <div class="row">
+          <label for="ratingInput">Universal Squash Rating</label>
+          <input type="number" id="ratingInput" min="0" step="0.01" placeholder="e.g., 4.25">
+        </div>
+
+        <div class="row">
+          <label for="dateInput">Progress Date</label>
+          <input type="date" id="dateInput">
+        </div>
+      </div>
 
       <div id="progressRows"></div>
 
@@ -1270,8 +1280,7 @@
         ['movesInput', 'Moves per Set', 1],
         ['secondsInput', 'Reaction Time / Time to Ball (s)', 0.1],
         ['moveBreakInput', 'Reposition Time (s)', 0],
-        ['setBreakInput', 'Rest Between Sets (s)', 0],
-        ['distanceInput', 'Average Distance to Ball (m)', 0.1]
+        ['setBreakInput', 'Rest Between Sets (s)', 0]
       ];
 
       for(const [id, label, min] of defs){
