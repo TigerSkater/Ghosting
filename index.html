@@ -517,12 +517,13 @@
 
     <div id="progressSection">
       <h2>📈 Sofia’s Progress</h2>
-      <p>Track speed to ball by month. Higher m/s = faster.</p>
+      <p>Chart is auto-calculated from your current drill settings. Higher m/s = faster.</p>
 
       <div id="progressRows"></div>
 
-      <button id="addProgressBtn">Add Month</button>
-      <button id="saveProgressBtn">Save Progress</button>
+      <button id="saveProfileBtn">Save Sofia Profile</button>
+      <button id="addProgressBtn">Add Current Stats to Chart</button>
+      <button id="resetProfileBtn">Reset Sofia Profile</button>
 
       <canvas id="progressChart"></canvas>
     </div>
@@ -606,7 +607,8 @@
       progressSection: document.getElementById('progressSection'),
       progressRows: document.getElementById('progressRows'),
       addProgress: document.getElementById('addProgressBtn'),
-      saveProgress: document.getElementById('saveProgressBtn'),
+      saveProfile: document.getElementById('saveProfileBtn'),
+      resetProfile: document.getElementById('resetProfileBtn'),
       progressChart: document.getElementById('progressChart')
     };
 
@@ -692,7 +694,7 @@
         els.sessionMetric.textContent = '—';
         els.workRatioMetric.textContent = '—';
         els.staminaMetric.textContent = '—';
-        return;
+        return null;
       }
 
       const totalMoves = sets * movesPerSet;
@@ -734,11 +736,91 @@
       };
     }
 
+    function defaultSofiaProfile(){
+      return {
+        sets: 10,
+        movesPerSet: 12,
+        reactionTime: 3,
+        repositionTime: 0.2,
+        restBetweenSets: 45,
+        distanceToBall: 4.5
+      };
+    }
+
+    function getSofiaProfile(){
+      const saved = localStorage.getItem('sofiaGhostingProfile');
+
+      if(saved){
+        try{
+          return JSON.parse(saved);
+        } catch(e){
+          return defaultSofiaProfile();
+        }
+      }
+
+      return defaultSofiaProfile();
+    }
+
+    function saveSofiaProfile(){
+      const profile = {
+        sets: getNumber(els.setsInput),
+        movesPerSet: getNumber(els.movesInput),
+        reactionTime: getNumber(els.secondsInput),
+        repositionTime: getNumber(els.moveBreakInput),
+        restBetweenSets: getNumber(els.setBreakInput),
+        distanceToBall: getNumber(els.distanceInput)
+      };
+
+      localStorage.setItem('sofiaGhostingProfile', JSON.stringify(profile));
+
+      els.welcome.style.display = 'block';
+      els.welcome.innerHTML = `
+        <span class="sparkle">💜 Sofia profile saved 💜</span><br>
+        These numbers will auto-load next time you enter your code.
+      `;
+
+      calculatePerformance();
+    }
+
+    function loadSofiaProfile(){
+      const profile = getSofiaProfile();
+
+      els.setsInput.value = profile.sets;
+      els.movesInput.value = profile.movesPerSet;
+      els.secondsInput.value = profile.reactionTime;
+      els.moveBreakInput.value = profile.repositionTime;
+      els.setBreakInput.value = profile.restBetweenSets;
+      els.distanceInput.value = profile.distanceToBall;
+
+      calculatePerformance();
+    }
+
+    function resetSofiaProfile(){
+      localStorage.removeItem('sofiaGhostingProfile');
+
+      const profile = defaultSofiaProfile();
+
+      els.setsInput.value = profile.sets;
+      els.movesInput.value = profile.movesPerSet;
+      els.secondsInput.value = profile.reactionTime;
+      els.moveBreakInput.value = profile.repositionTime;
+      els.setBreakInput.value = profile.restBetweenSets;
+      els.distanceInput.value = profile.distanceToBall;
+
+      calculatePerformance();
+
+      els.welcome.style.display = 'block';
+      els.welcome.innerHTML = `
+        <span class="sparkle">💜 Sofia profile reset 💜</span><br>
+        Back to original training stats.
+      `;
+    }
+
     function defaultProgressData(){
       return [
-        { month: 'June', speed: 1.20, notes: 'Starting point' },
-        { month: 'July', speed: 1.35, notes: 'Better movement' },
-        { month: 'August', speed: 1.50, notes: 'Goal pace' }
+        { month: 'Jun 1', speed: 1.20, notes: 'Starting point' },
+        { month: 'Jul 1', speed: 1.35, notes: 'Better movement' },
+        { month: 'Aug 1', speed: 1.50, notes: 'Goal pace' }
       ];
     }
 
@@ -769,7 +851,7 @@
         row.className = 'progress-row';
 
         row.innerHTML = `
-          <input type="text" value="${item.month}" placeholder="Month" data-index="${index}" data-field="month">
+          <input type="text" value="${item.month}" placeholder="Date / Label" data-index="${index}" data-field="month">
           <input type="number" value="${item.speed}" step="0.01" placeholder="Speed m/s" data-index="${index}" data-field="speed">
           <input type="text" value="${item.notes || ''}" placeholder="Notes" data-index="${index}" data-field="notes">
           <button type="button" data-delete="${index}">Delete</button>
@@ -863,7 +945,7 @@
             x: {
               title: {
                 display: true,
-                text: 'Month'
+                text: 'Date'
               }
             }
           }
@@ -873,17 +955,37 @@
 
     function addProgressMonth(){
       const current = calculatePerformance();
+
+      if(!current){
+        els.error.textContent = '⚠️ Fill in valid numbers first.';
+        return;
+      }
+
+      els.error.textContent = '';
+
       const data = getProgressData();
+      const today = new Date();
+
+      const label = today.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric'
+      });
 
       data.push({
-        month: 'New Month',
-        speed: current ? Number(current.speed.toFixed(2)) : 1.50,
-        notes: ''
+        month: label,
+        speed: Number(current.speed.toFixed(2)),
+        notes: `${current.totalMoves} moves · ${current.staminaLabel} · ${current.workRatio.toFixed(0)}% work`
       });
 
       saveProgressData(data);
       renderProgressRows();
       renderProgressChart();
+
+      els.welcome.style.display = 'block';
+      els.welcome.innerHTML = `
+        <span class="sparkle">📈 Progress saved</span><br>
+        Added ${current.speed.toFixed(2)} m/s to your chart.
+      `;
     }
 
     function showSofiaExtras(){
@@ -900,19 +1002,14 @@
       const code = els.codeInput.value.trim().toLowerCase();
 
       if(code === 'sofiahtang'){
-        els.setsInput.value = 10;
-        els.movesInput.value = 12;
-        els.secondsInput.value = 3;
-        els.moveBreakInput.value = 0.2;
-        els.setBreakInput.value = 45;
-        els.distanceInput.value = 4.5;
+        loadSofiaProfile();
 
         els.error.textContent = '';
 
         els.welcome.style.display = 'block';
         els.welcome.innerHTML = `
           <span class="sparkle">💜 Welcome back, Sofia 💜</span><br>
-          Purple mode activated: 10 sets · 12 moves · 3s to ball · 0.2s reset · 45s rest
+          Your saved profile has been loaded.
         `;
 
         showSofiaExtras();
@@ -1137,7 +1234,8 @@
     els.applyCode.onclick = applyTrainingCode;
 
     els.addProgress.onclick = addProgressMonth;
-    els.saveProgress.onclick = updateProgressFromInputs;
+    els.saveProfile.onclick = saveSofiaProfile;
+    els.resetProfile.onclick = resetSofiaProfile;
 
     els.codeInput.addEventListener('keydown', function(e){
       if(e.key === 'Enter'){
