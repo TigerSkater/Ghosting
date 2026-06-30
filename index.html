@@ -6,9 +6,13 @@
   <title>Squash Ghosting Drill</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
-
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
   <style>
-    :root { --ink:#2c3e50; --accent:#8e44ad; }
+    :root { 
+      --ink:#2c3e50; 
+      --accent:#8e44ad; 
+    }
 
     *{ 
       box-sizing:border-box; 
@@ -116,6 +120,54 @@
       to{ text-shadow:0 0 10px #e879f9, 0 0 18px #f9a8d4; }
     }
 
+    #progressSection{
+      display:none;
+      background:#fff8fb;
+      border:2px solid #e8b4c7;
+      border-radius:16px;
+      padding:16px;
+      margin:18px 0;
+      box-shadow:0 6px 18px rgba(114,47,55,0.12);
+    }
+
+    #progressSection h2{
+      font-family:'Dancing Script', cursive;
+      font-size:2.2rem;
+      color:#722f37;
+      margin:0 0 8px;
+    }
+
+    .progress-row{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr auto;
+      gap:8px;
+      margin:8px 0;
+      align-items:center;
+    }
+
+    .progress-row input{
+      padding:8px;
+      border:1px solid #ccc;
+      border-radius:8px;
+      min-width:0;
+    }
+
+    #progressChart{
+      margin-top:16px;
+      background:white;
+      border-radius:12px;
+      padding:10px;
+    }
+
+    #spotifySection{
+      display:none;
+      margin-top:14px;
+      padding:14px;
+      border-radius:14px;
+      background:linear-gradient(135deg, #ecfdf5, #fdf2f8);
+      border:1px solid #bbf7d0;
+    }
+
     .row{ 
       display:flex; 
       align-items:center; 
@@ -217,20 +269,20 @@
     }
 
     #direction{ 
-  font-size:4.5rem; 
-  font-weight:900; 
-  color:var(--ink); 
-  margin:10px 0; 
-  min-height:5rem; 
-  }
+      font-size:4.5rem; 
+      font-weight:900; 
+      color:var(--ink); 
+      margin:10px 0; 
+      min-height:5rem; 
+    }
 
     #countdown{ 
-  font-size:8rem; 
-  font-weight:900;
-  color:var(--accent); 
-  min-height:8.5rem; 
-  line-height:1;
-  }
+      font-size:8rem; 
+      font-weight:900;
+      color:var(--accent); 
+      min-height:8.5rem; 
+      line-height:1;
+    }
 
     #image{ 
       width:85vw; 
@@ -271,6 +323,34 @@
       color:#444; 
       margin:0 0 12px; 
     }
+
+    @media (max-width:600px){
+      .progress-row{
+        grid-template-columns:1fr;
+      }
+
+      .code-row{
+        flex-direction:column;
+      }
+
+      #codeInput,
+      #applyCodeBtn{
+        width:100%;
+      }
+
+      .direction-btn{
+        width:100px;
+        height:100px;
+      }
+
+      #direction{
+        font-size:3.3rem;
+      }
+
+      #countdown{
+        font-size:6.5rem;
+      }
+    }
   </style>
 </head>
 
@@ -290,6 +370,24 @@
       </div>
 
       <div id="welcomeMessage"></div>
+
+      <div id="progressSection">
+        <h2>📈 Sofia’s Progress</h2>
+        <p>Track your ghosting speed by month. Lower time = faster.</p>
+
+        <div id="progressRows"></div>
+
+        <button id="addProgressBtn">Add Month</button>
+        <button id="saveProgressBtn">Save Progress</button>
+
+        <canvas id="progressChart"></canvas>
+      </div>
+
+      <div id="spotifySection">
+        <strong>🎧 Training Playlist</strong>
+        <p>Spotify needs a click to start, so use this button before your drill.</p>
+        <button id="spotifyBtn">Open Spotify Playlist</button>
+      </div>
     </div>
 
     <div class="row">
@@ -372,17 +470,24 @@
       error: document.getElementById('error-message'),
       codeInput: document.getElementById('codeInput'),
       applyCode: document.getElementById('applyCodeBtn'),
-      welcome: document.getElementById('welcomeMessage')
+      welcome: document.getElementById('welcomeMessage'),
+      progressSection: document.getElementById('progressSection'),
+      progressRows: document.getElementById('progressRows'),
+      addProgress: document.getElementById('addProgressBtn'),
+      saveProgress: document.getElementById('saveProgressBtn'),
+      progressChart: document.getElementById('progressChart'),
+      spotifySection: document.getElementById('spotifySection'),
+      spotifyBtn: document.getElementById('spotifyBtn')
     };
 
     let controller = null;
     let skipBreakRequested = false;
+    let progressChart = null;
 
     function buildButtons(){
       els.dirBtns.innerHTML = '';
 
       const rows = [[], [], []];
-
       allDirections.forEach(d => rows[d.row].push(d));
 
       const labels = ['Front', 'Side', 'Back'];
@@ -426,6 +531,165 @@
       });
     }
 
+    function defaultProgressData(){
+      return [
+        { month: 'June', reactionTime: 3.5, notes: 'Starting point' },
+        { month: 'July', reactionTime: 3.2, notes: 'Improved control' },
+        { month: 'August', reactionTime: 3.0, notes: 'Goal pace' }
+      ];
+    }
+
+    function getProgressData(){
+      const saved = localStorage.getItem('sofiaGhostingProgress');
+
+      if(saved){
+        try{
+          return JSON.parse(saved);
+        } catch(e){
+          return defaultProgressData();
+        }
+      }
+
+      return defaultProgressData();
+    }
+
+    function saveProgressData(data){
+      localStorage.setItem('sofiaGhostingProgress', JSON.stringify(data));
+    }
+
+    function renderProgressRows(){
+      const data = getProgressData();
+      els.progressRows.innerHTML = '';
+
+      data.forEach((item, index) => {
+        const row = document.createElement('div');
+        row.className = 'progress-row';
+
+        row.innerHTML = `
+          <input type="text" value="${item.month}" placeholder="Month" data-index="${index}" data-field="month">
+          <input type="number" value="${item.reactionTime}" step="0.1" placeholder="Reaction time" data-index="${index}" data-field="reactionTime">
+          <input type="text" value="${item.notes || ''}" placeholder="Notes" data-index="${index}" data-field="notes">
+          <button type="button" data-delete="${index}">Delete</button>
+        `;
+
+        els.progressRows.appendChild(row);
+      });
+
+      els.progressRows.querySelectorAll('input').forEach(input => {
+        input.addEventListener('input', updateProgressFromInputs);
+      });
+
+      els.progressRows.querySelectorAll('button[data-delete]').forEach(btn => {
+        btn.addEventListener('click', function(){
+          const index = Number(this.dataset.delete);
+          const data = getProgressData();
+
+          data.splice(index, 1);
+
+          saveProgressData(data);
+          renderProgressRows();
+          renderProgressChart();
+        });
+      });
+    }
+
+    function updateProgressFromInputs(){
+      const rows = els.progressRows.querySelectorAll('.progress-row');
+      const data = [];
+
+      rows.forEach(row => {
+        const month = row.querySelector('[data-field="month"]').value;
+        const reactionTime = parseFloat(row.querySelector('[data-field="reactionTime"]').value);
+        const notes = row.querySelector('[data-field="notes"]').value;
+
+        data.push({
+          month,
+          reactionTime: isNaN(reactionTime) ? 0 : reactionTime,
+          notes
+        });
+      });
+
+      saveProgressData(data);
+      renderProgressChart();
+    }
+
+    function renderProgressChart(){
+      const data = getProgressData();
+
+      const labels = data.map(item => item.month);
+      const reactionTimes = data.map(item => Number(item.reactionTime));
+
+      if(progressChart){
+        progressChart.destroy();
+      }
+
+      progressChart = new Chart(els.progressChart, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Reaction Time',
+            data: reactionTimes,
+            tension: 0.3,
+            pointRadius: 5,
+            pointHoverRadius: 7
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              display: true
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context){
+                  return `${context.parsed.y}s reaction time`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              title: {
+                display: true,
+                text: 'Seconds per move'
+              },
+              beginAtZero: false
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'Month'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function addProgressMonth(){
+      const data = getProgressData();
+
+      data.push({
+        month: 'New Month',
+        reactionTime: 3,
+        notes: ''
+      });
+
+      saveProgressData(data);
+      renderProgressRows();
+      renderProgressChart();
+    }
+
+    function showSofiaExtras(){
+      els.progressSection.style.display = 'block';
+      els.spotifySection.style.display = 'block';
+
+      renderProgressRows();
+      renderProgressChart();
+    }
+
     function applyTrainingCode(){
       const code = els.codeInput.value.trim().toLowerCase();
 
@@ -444,6 +708,8 @@
           Elite ghosting mode activated: 10 sets · 12 moves · 3s reaction · 0.2s reset · 45s rest
         `;
 
+        showSofiaExtras();
+
         els.applyCode.textContent = 'Code Applied ✓';
 
         setTimeout(() => {
@@ -452,6 +718,8 @@
 
       } else {
         els.welcome.style.display = 'none';
+        els.progressSection.style.display = 'none';
+        els.spotifySection.style.display = 'none';
         els.error.textContent = '⚠️ Invalid code. Try again.';
       }
     }
@@ -646,6 +914,13 @@
     els.restart.onclick = restart;
     els.skipBreak.onclick = skipBreak;
     els.applyCode.onclick = applyTrainingCode;
+
+    els.addProgress.onclick = addProgressMonth;
+    els.saveProgress.onclick = updateProgressFromInputs;
+
+    els.spotifyBtn.onclick = function(){
+      window.open('https://open.spotify.com/playlist/3YMVrD0daHd8jLWDeKzpSm', '_blank');
+    };
 
     els.codeInput.addEventListener('keydown', function(e){
       if(e.key === 'Enter'){
