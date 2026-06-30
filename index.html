@@ -291,6 +291,13 @@
       margin-top:6px; 
     }
 
+    #sheetStatus{
+      color:var(--accent);
+      font-weight:800;
+      margin-top:8px;
+      min-height:1.2em;
+    }
+
     #progressSection p{
       margin-top:0;
     }
@@ -302,21 +309,11 @@
       margin:14px 0;
       border:1px solid #eee;
     }
-    <div class="sofia-inputs">
-  <h3>Enter Old Squash Rating</h3>
 
-  <div class="row">
-    <label for="oldRatingDateInput">Old Rating Date</label>
-    <input type="date" id="oldRatingDateInput">
-  </div>
-
-  <div class="row">
-    <label for="oldRatingInput">Old Universal Squash Rating</label>
-    <input type="number" id="oldRatingInput" min="0" step="0.01" placeholder="e.g., 3.85">
-  </div>
-
-  <button id="addOldRatingBtn">Add Old Rating to Chart</button>
-</div>
+    .sofia-inputs h3{
+      margin:0 0 10px;
+      color:var(--title);
+    }
 
     .progress-row{
       display:grid;
@@ -548,6 +545,8 @@
       <p>Speed is auto-calculated. Universal Squash Rating helps compare real squash progress with ghosting speed.</p>
 
       <div class="sofia-inputs">
+        <h3>Current Ghosting Entry</h3>
+
         <div class="row">
           <label for="distanceInput">Average Distance to Ball (m)</label>
           <input type="number" id="distanceInput" min="0.1" step="0.1" placeholder="e.g., 4.5">
@@ -564,15 +563,38 @@
         </div>
       </div>
 
+      <div class="sofia-inputs">
+        <h3>Enter Old Squash Rating</h3>
+
+        <div class="row">
+          <label for="oldRatingDateInput">Old Rating Date</label>
+          <input type="date" id="oldRatingDateInput">
+        </div>
+
+        <div class="row">
+          <label for="oldRatingInput">Old Universal Squash Rating</label>
+          <input type="number" id="oldRatingInput" min="0" step="0.01" placeholder="e.g., 3.85">
+        </div>
+
+        <button id="addOldRatingBtn">Add Old Rating to Chart</button>
+      </div>
+
       <div id="progressRows"></div>
 
       <button id="saveProfileBtn">Save Sofia Profile</button>
       <button id="addProgressBtn">Add Current Stats to Chart</button>
       <button id="resetProfileBtn">Reset Sofia Profile</button>
 
+      <div id="sheetStatus"></div>
+
       <div class="chart-card">
         <h3>Speed Progress</h3>
         <canvas id="progressChart"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <h3>Universal Squash Rating Progress</h3>
+        <canvas id="ratingProgressChart"></canvas>
       </div>
 
       <div class="chart-card">
@@ -639,6 +661,7 @@
       restart: document.getElementById('restartBtn'),
       skipBreak: document.getElementById('skipBreakBtn'),
       error: document.getElementById('error-message'),
+      sheetStatus: document.getElementById('sheetStatus'),
 
       codeInput: document.getElementById('codeInput'),
       applyCode: document.getElementById('applyCodeBtn'),
@@ -652,6 +675,8 @@
       distanceInput: document.getElementById('distanceInput'),
       ratingInput: document.getElementById('ratingInput'),
       dateInput: document.getElementById('dateInput'),
+      oldRatingDateInput: document.getElementById('oldRatingDateInput'),
+      oldRatingInput: document.getElementById('oldRatingInput'),
 
       calculatorBox: document.querySelector('.calculator-box'),
 
@@ -665,9 +690,11 @@
       progressSection: document.getElementById('progressSection'),
       progressRows: document.getElementById('progressRows'),
       addProgress: document.getElementById('addProgressBtn'),
+      addOldRating: document.getElementById('addOldRatingBtn'),
       saveProfile: document.getElementById('saveProfileBtn'),
       resetProfile: document.getElementById('resetProfileBtn'),
       progressChart: document.getElementById('progressChart'),
+      ratingProgressChart: document.getElementById('ratingProgressChart'),
       ratingChart: document.getElementById('ratingChart'),
       correlationText: document.getElementById('correlationText')
     };
@@ -675,22 +702,33 @@
     let controller = null;
     let skipBreakRequested = false;
     let progressChart = null;
+    let ratingProgressChart = null;
     let ratingChart = null;
 
     async function saveToGoogleSheets(payload){
+      els.sheetStatus.textContent = 'Sending to Google Sheets...';
+
       try{
+        const finalPayload = {
+          timestamp: new Date().toISOString(),
+          source: 'Squash Ghosting Drill Website',
+          ...payload
+        };
+
         await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
           method: 'POST',
           mode: 'no-cors',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'text/plain;charset=utf-8'
           },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(finalPayload)
         });
 
+        els.sheetStatus.textContent = 'Sent to Google Sheets. Check your sheet to confirm.';
         return true;
       } catch(e){
         console.error('Google Sheets save failed:', e);
+        els.sheetStatus.textContent = 'Google Sheets save failed. Check Apps Script deployment.';
         return false;
       }
     }
@@ -884,9 +922,13 @@
         repositionTime: profile.repositionTime,
         restBetweenSets: profile.restBetweenSets,
         distanceToBall: profile.distanceToBall,
+        speed: '',
+        totalMoves: '',
+        workRatio: '',
+        stamina: '',
         rating: profile.rating,
-        notes: 'Saved Sofia profile',
-        progressDate: profile.progressDate
+        progressDate: profile.progressDate,
+        notes: 'Saved Sofia profile'
       });
 
       els.welcome.style.display = 'block';
@@ -938,9 +980,9 @@
 
     function defaultProgressData(){
       return [
-        { month: '2026-06-01', speed: 1.20, rating: 4.00, notes: 'Starting point' },
-        { month: '2026-07-01', speed: 1.35, rating: 4.15, notes: 'Better movement' },
-        { month: '2026-08-01', speed: 1.50, rating: 4.25, notes: 'Goal pace' }
+        { month: '2026-06-01', speed: 1.20, rating: 4.00, notes: 'Starting point', type: 'progress' },
+        { month: '2026-07-01', speed: 1.35, rating: 4.15, notes: 'Better movement', type: 'progress' },
+        { month: '2026-08-01', speed: 1.50, rating: 4.25, notes: 'Goal pace', type: 'progress' }
       ];
     }
 
@@ -950,11 +992,13 @@
       if(saved){
         try{
           const data = JSON.parse(saved);
+
           return data.map(item => ({
             month: item.month,
-            speed: Number(item.speed),
+            speed: item.speed === null || item.speed === undefined || item.speed === '' ? null : Number(item.speed),
             rating: item.rating ? Number(item.rating) : 4.00,
-            notes: item.notes || ''
+            notes: item.notes || '',
+            type: item.type || 'progress'
           }));
         } catch(e){
           return defaultProgressData();
@@ -978,7 +1022,7 @@
 
         row.innerHTML = `
           <input type="text" value="${item.month}" placeholder="Date / Label" data-index="${index}" data-field="month">
-          <input type="number" value="${item.speed}" step="0.01" placeholder="Speed m/s" data-index="${index}" data-field="speed">
+          <input type="number" value="${item.speed === null ? '' : item.speed}" step="0.01" placeholder="Speed m/s" data-index="${index}" data-field="speed">
           <input type="number" value="${item.rating}" min="0" step="0.01" placeholder="USR" data-index="${index}" data-field="rating">
           <input type="text" value="${item.notes || ''}" placeholder="Notes" data-index="${index}" data-field="notes">
           <button type="button" data-delete="${index}">Delete</button>
@@ -1011,15 +1055,18 @@
 
       rows.forEach(row => {
         const month = row.querySelector('[data-field="month"]').value;
-        const speed = parseFloat(row.querySelector('[data-field="speed"]').value);
+        const speedRaw = row.querySelector('[data-field="speed"]').value;
         const rating = parseFloat(row.querySelector('[data-field="rating"]').value);
         const notes = row.querySelector('[data-field="notes"]').value;
 
+        const speed = speedRaw === '' ? null : parseFloat(speedRaw);
+
         data.push({
           month,
-          speed: isNaN(speed) ? 0 : speed,
+          speed: speed === null || isNaN(speed) ? null : speed,
           rating: isNaN(rating) ? 0 : cleanRating(rating),
-          notes
+          notes,
+          type: speed === null || isNaN(speed) ? 'ratingOnly' : 'progress'
         });
       });
 
@@ -1061,7 +1108,7 @@
     }
 
     function renderProgressChart(){
-      const data = getProgressData();
+      const data = getProgressData().filter(item => Number(item.speed) > 0);
 
       const labels = data.map(item => item.month);
       const speeds = data.map(item => Number(item.speed));
@@ -1099,6 +1146,59 @@
               title: {
                 display: true,
                 text: 'Meters per second'
+              },
+              beginAtZero: false
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'Date'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function renderRatingProgressChart(){
+      const data = getProgressData().filter(item => Number(item.rating) > 0);
+
+      const labels = data.map(item => item.month);
+      const ratings = data.map(item => Number(item.rating));
+
+      if(ratingProgressChart){
+        ratingProgressChart.destroy();
+      }
+
+      ratingProgressChart = new Chart(els.ratingProgressChart, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Universal Squash Rating',
+            data: ratings,
+            tension: 0.3,
+            pointRadius: 5,
+            pointHoverRadius: 7
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true },
+            tooltip: {
+              callbacks: {
+                label: function(context){
+                  return `USR ${context.parsed.y}`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              title: {
+                display: true,
+                text: 'Universal Squash Rating'
               },
               beginAtZero: false
             },
@@ -1170,7 +1270,7 @@
       const r = calculateCorrelation(data);
 
       if(r === null){
-        els.correlationText.textContent = 'Correlation: add at least 2 varied entries';
+        els.correlationText.textContent = 'Correlation: add at least 2 ghosting entries with speed + USR';
       } else {
         let interpretation = 'weak';
 
@@ -1186,6 +1286,7 @@
 
     function renderAllCharts(){
       renderProgressChart();
+      renderRatingProgressChart();
       renderRatingChart();
     }
 
@@ -1217,7 +1318,8 @@
         month: label,
         speed: Number(current.speed.toFixed(2)),
         rating: rating,
-        notes: notes
+        notes: notes,
+        type: 'progress'
       });
 
       saveProgressData(data);
@@ -1237,15 +1339,72 @@
         workRatio: Number(current.workRatio.toFixed(0)),
         stamina: current.staminaLabel,
         rating: rating,
-        notes: notes,
-        progressDate: label
+        progressDate: label,
+        notes: notes
       });
 
       els.welcome.style.display = 'block';
       els.welcome.innerHTML = `
         <span class="sparkle">📈 Progress saved</span><br>
-        Added ${current.speed.toFixed(2)} m/s with USR ${rating} and sent it to Google Sheets.
+        Added ${current.speed.toFixed(2)} m/s with USR ${rating}.
       `;
+    }
+
+    function addOldRating(){
+      const date = els.oldRatingDateInput.value;
+      let rating = getNumber(els.oldRatingInput);
+
+      if(!date){
+        els.error.textContent = '⚠️ Add a date for the old squash rating.';
+        return;
+      }
+
+      if(rating <= 0){
+        els.error.textContent = '⚠️ Add an old Universal Squash Rating.';
+        return;
+      }
+
+      rating = cleanRating(rating);
+      els.error.textContent = '';
+
+      const data = getProgressData();
+
+      data.push({
+        month: date,
+        speed: null,
+        rating: rating,
+        notes: 'Old squash rating entry',
+        type: 'ratingOnly'
+      });
+
+      saveProgressData(data);
+      renderProgressRows();
+      renderAllCharts();
+
+      saveToGoogleSheets({
+        type: 'oldRating',
+        sets: '',
+        movesPerSet: '',
+        reactionTime: '',
+        repositionTime: '',
+        restBetweenSets: '',
+        distanceToBall: '',
+        speed: '',
+        totalMoves: '',
+        workRatio: '',
+        stamina: '',
+        rating: rating,
+        progressDate: date,
+        notes: 'Old squash rating entry'
+      });
+
+      els.welcome.style.display = 'block';
+      els.welcome.innerHTML = `
+        <span class="sparkle">📈 Old rating saved</span><br>
+        Added USR ${rating} from ${date} to your rating chart.
+      `;
+
+      els.oldRatingInput.value = '';
     }
 
     function showSofiaExtras(){
@@ -1493,6 +1652,7 @@
     els.applyCode.onclick = applyTrainingCode;
 
     els.addProgress.onclick = addProgressMonth;
+    els.addOldRating.onclick = addOldRating;
     els.saveProfile.onclick = saveSofiaProfile;
     els.resetProfile.onclick = resetSofiaProfile;
 
