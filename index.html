@@ -10,8 +10,25 @@
   
   <style>
     :root { 
+      --bg:#f7e7ce;
+      --card:#fff8fb;
       --ink:#2c3e50; 
-      --accent:#8e44ad; 
+      --accent:#8e44ad;
+      --title:#722f37;
+      --button:#b35a7a;
+      --border:#e8b4c7;
+      --soft:#fff0f6;
+    }
+
+    body.sofia-mode{
+      --bg:#f3e8ff;
+      --card:#faf5ff;
+      --ink:#312e81;
+      --accent:#7c3aed;
+      --title:#6d28d9;
+      --button:#8b5cf6;
+      --border:#c4b5fd;
+      --soft:#ede9fe;
     }
 
     *{ 
@@ -19,19 +36,24 @@
     }
 
     body{ 
-      background:#f7e7ce; 
+      background:var(--bg); 
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; 
       color:#333; 
       text-align:center; 
       padding:20px; 
+      transition:background .4s ease;
     }
 
     h1{ 
       font-family:'Dancing Script', cursive; 
       font-size:3rem; 
-      color:#722f37; 
+      color:var(--title); 
       text-shadow:1px 1px 2px #f2acb3; 
       margin:0 0 12px; 
+    }
+
+    body.sofia-mode h1{
+      text-shadow:1px 1px 4px #ddd6fe;
     }
 
     #floatingGhost{ 
@@ -52,23 +74,26 @@
     }
 
     #configContainer{ 
-      max-width:560px; 
+      max-width:700px; 
       margin:0 auto; 
     }
 
-    .code-box{
-      background:#fff8fb;
-      border:2px solid #e8b4c7;
-      border-radius:16px;
+    .code-box,
+    .calculator-box,
+    #progressSection{
+      background:var(--card);
+      border:2px solid var(--border);
+      border-radius:18px;
       padding:16px;
       margin:12px 0 18px;
       box-shadow:0 6px 18px rgba(114,47,55,0.12);
+      transition:background .4s ease, border .4s ease;
     }
 
     .code-box label{
       display:block;
       font-weight:800;
-      color:#722f37;
+      color:var(--title);
       margin-bottom:8px;
     }
 
@@ -95,14 +120,18 @@
     #welcomeMessage{
       display:none;
       margin-top:12px;
-      padding:12px;
+      padding:14px;
       border-radius:14px;
       background:linear-gradient(135deg, #fff0f6, #f3e8ff);
-      color:#722f37;
+      color:var(--title);
       font-weight:900;
       font-size:1.2rem;
       animation:popIn .45s ease;
       box-shadow:0 4px 12px rgba(142,68,173,0.18);
+    }
+
+    body.sofia-mode #welcomeMessage{
+      background:linear-gradient(135deg, #ede9fe, #f5f3ff);
     }
 
     @keyframes popIn{
@@ -117,55 +146,7 @@
 
     @keyframes sparkle{
       from{ text-shadow:0 0 4px #fff; }
-      to{ text-shadow:0 0 10px #e879f9, 0 0 18px #f9a8d4; }
-    }
-
-    #progressSection{
-      display:none;
-      background:#fff8fb;
-      border:2px solid #e8b4c7;
-      border-radius:16px;
-      padding:16px;
-      margin:18px 0;
-      box-shadow:0 6px 18px rgba(114,47,55,0.12);
-    }
-
-    #progressSection h2{
-      font-family:'Dancing Script', cursive;
-      font-size:2.2rem;
-      color:#722f37;
-      margin:0 0 8px;
-    }
-
-    .progress-row{
-      display:grid;
-      grid-template-columns:1fr 1fr 1fr auto;
-      gap:8px;
-      margin:8px 0;
-      align-items:center;
-    }
-
-    .progress-row input{
-      padding:8px;
-      border:1px solid #ccc;
-      border-radius:8px;
-      min-width:0;
-    }
-
-    #progressChart{
-      margin-top:16px;
-      background:white;
-      border-radius:12px;
-      padding:10px;
-    }
-
-    #spotifySection{
-      display:none;
-      margin-top:14px;
-      padding:14px;
-      border-radius:14px;
-      background:linear-gradient(135deg, #ecfdf5, #fdf2f8);
-      border:1px solid #bbf7d0;
+      to{ text-shadow:0 0 10px #c084fc, 0 0 18px #a78bfa; }
     }
 
     .row{ 
@@ -178,6 +159,7 @@
     .row>label{ 
       flex:1; 
       text-align:left; 
+      font-weight:600;
     }
 
     .row>input{ 
@@ -185,6 +167,53 @@
       padding:8px 10px; 
       border:1px solid #ccc; 
       border-radius:8px; 
+    }
+
+    .calculator-box h2,
+    #progressSection h2{
+      font-family:'Dancing Script', cursive;
+      font-size:2.3rem;
+      color:var(--title);
+      margin:0 0 8px;
+    }
+
+    .metric-grid{
+      display:grid;
+      grid-template-columns:repeat(2, 1fr);
+      gap:10px;
+      margin-top:14px;
+    }
+
+    .metric{
+      background:white;
+      border:1px solid #eee;
+      border-radius:14px;
+      padding:12px;
+      text-align:left;
+    }
+
+    body.sofia-mode .metric{
+      background:#ffffff;
+      border:1px solid #ddd6fe;
+    }
+
+    .metric-label{
+      font-size:.88rem;
+      color:#666;
+      font-weight:700;
+    }
+
+    .metric-value{
+      font-size:1.35rem;
+      color:var(--accent);
+      font-weight:900;
+      margin-top:4px;
+    }
+
+    .metric-note{
+      font-size:.8rem;
+      color:#777;
+      margin-top:4px;
     }
 
     .direction-grid{ 
@@ -221,6 +250,10 @@
       outline: 3px solid #0ea5a4; 
     }
 
+    body.sofia-mode .direction-btn.active{
+      outline:3px solid #a78bfa;
+    }
+
     .direction-btn img{ 
       width:100%; 
       height:100%; 
@@ -231,11 +264,16 @@
       padding:10px 16px; 
       border:0; 
       border-radius:8px; 
-      background:#b35a7a; 
+      background:var(--button); 
       color:#fff; 
       cursor:pointer; 
       margin-top:10px; 
       font-size:1rem;
+      transition:transform .15s ease, background .3s ease;
+    }
+
+    button:hover{
+      transform:translateY(-1px);
     }
 
     button:disabled{ 
@@ -248,6 +286,36 @@
       font-weight:700; 
       min-height:1.2em; 
       margin-top:6px; 
+    }
+
+    #progressSection{
+      display:none;
+    }
+
+    #progressSection p{
+      margin-top:0;
+    }
+
+    .progress-row{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr auto;
+      gap:8px;
+      margin:8px 0;
+      align-items:center;
+    }
+
+    .progress-row input{
+      padding:8px;
+      border:1px solid #ccc;
+      border-radius:8px;
+      min-width:0;
+    }
+
+    #progressChart{
+      margin-top:16px;
+      background:white;
+      border-radius:12px;
+      padding:10px;
     }
 
     #drillView{ 
@@ -263,7 +331,7 @@
     #setStatus{
       font-size:1.4rem;
       font-weight:800;
-      color:#722f37;
+      color:var(--title);
       margin-top:8px;
       min-height:1.8rem;
     }
@@ -314,7 +382,7 @@
     #endView h2{ 
       font-family:'Dancing Script', cursive; 
       font-size:2.6rem; 
-      color:#2c3e50; 
+      color:var(--ink); 
       margin:18px 0 6px; 
     }
 
@@ -324,8 +392,9 @@
       margin:0 0 12px; 
     }
 
-    @media (max-width:600px){
-      .progress-row{
+    @media (max-width:650px){
+      .progress-row,
+      .metric-grid{
         grid-template-columns:1fr;
       }
 
@@ -370,24 +439,6 @@
       </div>
 
       <div id="welcomeMessage"></div>
-
-      <div id="progressSection">
-        <h2>📈 Sofia’s Progress</h2>
-        <p>Track your ghosting speed by month. Lower time = faster.</p>
-
-        <div id="progressRows"></div>
-
-        <button id="addProgressBtn">Add Month</button>
-        <button id="saveProgressBtn">Save Progress</button>
-
-        <canvas id="progressChart"></canvas>
-      </div>
-
-      <div id="spotifySection">
-        <strong>🎧 Training Playlist</strong>
-        <p>Spotify needs a click to start, so use this button before your drill.</p>
-        <button id="spotifyBtn">Open Spotify Playlist</button>
-      </div>
     </div>
 
     <div class="row">
@@ -401,18 +452,78 @@
     </div>
 
     <div class="row">
-      <label for="secondsInput">Reaction Time (s)</label>
-      <input type="number" id="secondsInput" min="0.1" step="0.1" placeholder="e.g., 1.2">
+      <label for="secondsInput">Reaction Time / Time to Ball (s)</label>
+      <input type="number" id="secondsInput" min="0.1" step="0.1" placeholder="e.g., 3">
     </div>
 
     <div class="row">
       <label for="moveBreakInput">Reposition Time (s)</label>
-      <input type="number" id="moveBreakInput" min="0" step="0.1" placeholder="e.g., 0.6">
+      <input type="number" id="moveBreakInput" min="0" step="0.1" placeholder="e.g., 0.2">
     </div>
 
     <div class="row">
       <label for="setBreakInput">Rest Between Sets (s)</label>
-      <input type="number" id="setBreakInput" min="0" step="1" placeholder="e.g., 20">
+      <input type="number" id="setBreakInput" min="0" step="1" placeholder="e.g., 45">
+    </div>
+
+    <div class="row">
+      <label for="distanceInput">Average Distance to Ball (m)</label>
+      <input type="number" id="distanceInput" min="0.1" step="0.1" placeholder="e.g., 4.5">
+    </div>
+
+    <div class="calculator-box">
+      <h2>Performance Calculator</h2>
+      <p>These update automatically when you change your numbers.</p>
+
+      <div class="metric-grid">
+        <div class="metric">
+          <div class="metric-label">Estimated speed to ball</div>
+          <div class="metric-value" id="speedMetric">—</div>
+          <div class="metric-note">Distance ÷ reaction time</div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-label">Total moves</div>
+          <div class="metric-value" id="movesMetric">—</div>
+          <div class="metric-note">Sets × moves per set</div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-label">Active ghosting time</div>
+          <div class="metric-value" id="activeMetric">—</div>
+          <div class="metric-note">Time actually moving to the ball</div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-label">Total session time</div>
+          <div class="metric-value" id="sessionMetric">—</div>
+          <div class="metric-note">Active + reposition + rest</div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-label">Work ratio</div>
+          <div class="metric-value" id="workRatioMetric">—</div>
+          <div class="metric-note">Higher = less rest, more stamina demand</div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-label">Stamina load</div>
+          <div class="metric-value" id="staminaMetric">—</div>
+          <div class="metric-note">Light, moderate, hard, or intense</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="progressSection">
+      <h2>📈 Sofia’s Progress</h2>
+      <p>Track speed to ball by month. Higher m/s = faster.</p>
+
+      <div id="progressRows"></div>
+
+      <button id="addProgressBtn">Add Month</button>
+      <button id="saveProgressBtn">Save Progress</button>
+
+      <canvas id="progressChart"></canvas>
     </div>
 
     <div class="direction-grid" id="directionButtons"></div>
@@ -458,26 +569,42 @@
       config: document.getElementById('configContainer'),
       drill: document.getElementById('drillView'),
       end: document.getElementById('endView'),
+
       setStatus: document.getElementById('setStatus'),
       direction: document.getElementById('direction'),
       countdown: document.getElementById('countdown'),
       image: document.getElementById('image'),
+
       dirBtns: document.getElementById('directionButtons'),
       start: document.getElementById('startBtn'),
       stop: document.getElementById('stopBtn'),
       restart: document.getElementById('restartBtn'),
       skipBreak: document.getElementById('skipBreakBtn'),
       error: document.getElementById('error-message'),
+
       codeInput: document.getElementById('codeInput'),
       applyCode: document.getElementById('applyCodeBtn'),
       welcome: document.getElementById('welcomeMessage'),
+
+      setsInput: document.getElementById('setsInput'),
+      movesInput: document.getElementById('movesInput'),
+      secondsInput: document.getElementById('secondsInput'),
+      moveBreakInput: document.getElementById('moveBreakInput'),
+      setBreakInput: document.getElementById('setBreakInput'),
+      distanceInput: document.getElementById('distanceInput'),
+
+      speedMetric: document.getElementById('speedMetric'),
+      movesMetric: document.getElementById('movesMetric'),
+      activeMetric: document.getElementById('activeMetric'),
+      sessionMetric: document.getElementById('sessionMetric'),
+      workRatioMetric: document.getElementById('workRatioMetric'),
+      staminaMetric: document.getElementById('staminaMetric'),
+
       progressSection: document.getElementById('progressSection'),
       progressRows: document.getElementById('progressRows'),
       addProgress: document.getElementById('addProgressBtn'),
       saveProgress: document.getElementById('saveProgressBtn'),
-      progressChart: document.getElementById('progressChart'),
-      spotifySection: document.getElementById('spotifySection'),
-      spotifyBtn: document.getElementById('spotifyBtn')
+      progressChart: document.getElementById('progressChart')
     };
 
     let controller = null;
@@ -531,16 +658,89 @@
       });
     }
 
+    function secondsToMinSec(seconds){
+      const min = Math.floor(seconds / 60);
+      const sec = Math.round(seconds % 60);
+
+      if(min <= 0){
+        return `${sec}s`;
+      }
+
+      return `${min}m ${sec}s`;
+    }
+
+    function getNumber(el){
+      const n = parseFloat(el.value);
+      return isNaN(n) ? 0 : n;
+    }
+
+    function calculatePerformance(){
+      const sets = getNumber(els.setsInput);
+      const movesPerSet = getNumber(els.movesInput);
+      const reaction = getNumber(els.secondsInput);
+      const reposition = getNumber(els.moveBreakInput);
+      const rest = getNumber(els.setBreakInput);
+      const distance = getNumber(els.distanceInput);
+
+      if(sets <= 0 || movesPerSet <= 0 || reaction <= 0 || distance <= 0){
+        els.speedMetric.textContent = '—';
+        els.movesMetric.textContent = '—';
+        els.activeMetric.textContent = '—';
+        els.sessionMetric.textContent = '—';
+        els.workRatioMetric.textContent = '—';
+        els.staminaMetric.textContent = '—';
+        return;
+      }
+
+      const totalMoves = sets * movesPerSet;
+      const breaks = Math.max(0, sets - 1);
+
+      const speed = distance / reaction;
+      const activeTime = totalMoves * reaction;
+      const resetTime = totalMoves * reposition;
+      const restTime = breaks * rest;
+      const totalTime = activeTime + resetTime + restTime;
+      const workRatio = totalTime > 0 ? (activeTime / totalTime) * 100 : 0;
+
+      let staminaLabel = 'Light';
+
+      if(workRatio >= 75 && totalMoves >= 100){
+        staminaLabel = 'Intense';
+      } else if(workRatio >= 60 && totalMoves >= 80){
+        staminaLabel = 'Hard';
+      } else if(workRatio >= 40 && totalMoves >= 50){
+        staminaLabel = 'Moderate';
+      }
+
+      els.speedMetric.textContent = `${speed.toFixed(2)} m/s`;
+      els.movesMetric.textContent = `${totalMoves}`;
+      els.activeMetric.textContent = secondsToMinSec(activeTime);
+      els.sessionMetric.textContent = secondsToMinSec(totalTime);
+      els.workRatioMetric.textContent = `${workRatio.toFixed(0)}%`;
+      els.staminaMetric.textContent = staminaLabel;
+
+      return {
+        speed,
+        totalMoves,
+        activeTime,
+        resetTime,
+        restTime,
+        totalTime,
+        workRatio,
+        staminaLabel
+      };
+    }
+
     function defaultProgressData(){
       return [
-        { month: 'June', reactionTime: 3.5, notes: 'Starting point' },
-        { month: 'July', reactionTime: 3.2, notes: 'Improved control' },
-        { month: 'August', reactionTime: 3.0, notes: 'Goal pace' }
+        { month: 'June', speed: 1.20, notes: 'Starting point' },
+        { month: 'July', speed: 1.35, notes: 'Better movement' },
+        { month: 'August', speed: 1.50, notes: 'Goal pace' }
       ];
     }
 
     function getProgressData(){
-      const saved = localStorage.getItem('sofiaGhostingProgress');
+      const saved = localStorage.getItem('sofiaGhostingProgressSpeed');
 
       if(saved){
         try{
@@ -554,7 +754,7 @@
     }
 
     function saveProgressData(data){
-      localStorage.setItem('sofiaGhostingProgress', JSON.stringify(data));
+      localStorage.setItem('sofiaGhostingProgressSpeed', JSON.stringify(data));
     }
 
     function renderProgressRows(){
@@ -567,7 +767,7 @@
 
         row.innerHTML = `
           <input type="text" value="${item.month}" placeholder="Month" data-index="${index}" data-field="month">
-          <input type="number" value="${item.reactionTime}" step="0.1" placeholder="Reaction time" data-index="${index}" data-field="reactionTime">
+          <input type="number" value="${item.speed}" step="0.01" placeholder="Speed m/s" data-index="${index}" data-field="speed">
           <input type="text" value="${item.notes || ''}" placeholder="Notes" data-index="${index}" data-field="notes">
           <button type="button" data-delete="${index}">Delete</button>
         `;
@@ -599,12 +799,12 @@
 
       rows.forEach(row => {
         const month = row.querySelector('[data-field="month"]').value;
-        const reactionTime = parseFloat(row.querySelector('[data-field="reactionTime"]').value);
+        const speed = parseFloat(row.querySelector('[data-field="speed"]').value);
         const notes = row.querySelector('[data-field="notes"]').value;
 
         data.push({
           month,
-          reactionTime: isNaN(reactionTime) ? 0 : reactionTime,
+          speed: isNaN(speed) ? 0 : speed,
           notes
         });
       });
@@ -617,7 +817,7 @@
       const data = getProgressData();
 
       const labels = data.map(item => item.month);
-      const reactionTimes = data.map(item => Number(item.reactionTime));
+      const speeds = data.map(item => Number(item.speed));
 
       if(progressChart){
         progressChart.destroy();
@@ -628,8 +828,8 @@
         data: {
           labels: labels,
           datasets: [{
-            label: 'Reaction Time',
-            data: reactionTimes,
+            label: 'Speed to Ball',
+            data: speeds,
             tension: 0.3,
             pointRadius: 5,
             pointHoverRadius: 7
@@ -644,7 +844,7 @@
             tooltip: {
               callbacks: {
                 label: function(context){
-                  return `${context.parsed.y}s reaction time`;
+                  return `${context.parsed.y} m/s`;
                 }
               }
             }
@@ -653,7 +853,7 @@
             y: {
               title: {
                 display: true,
-                text: 'Seconds per move'
+                text: 'Meters per second'
               },
               beginAtZero: false
             },
@@ -669,11 +869,12 @@
     }
 
     function addProgressMonth(){
+      const current = calculatePerformance();
       const data = getProgressData();
 
       data.push({
         month: 'New Month',
-        reactionTime: 3,
+        speed: current ? Number(current.speed.toFixed(2)) : 1.50,
         notes: ''
       });
 
@@ -683,29 +884,31 @@
     }
 
     function showSofiaExtras(){
+      document.body.classList.add('sofia-mode');
       els.progressSection.style.display = 'block';
-      els.spotifySection.style.display = 'block';
 
       renderProgressRows();
       renderProgressChart();
+      calculatePerformance();
     }
 
     function applyTrainingCode(){
       const code = els.codeInput.value.trim().toLowerCase();
 
-      if(code === 'sofiatang'){
-        document.getElementById('setsInput').value = 10;
-        document.getElementById('movesInput').value = 12;
-        document.getElementById('secondsInput').value = 3;
-        document.getElementById('moveBreakInput').value = 0.2;
-        document.getElementById('setBreakInput').value = 45;
+      if(code === 'sofia'){
+        els.setsInput.value = 10;
+        els.movesInput.value = 12;
+        els.secondsInput.value = 3;
+        els.moveBreakInput.value = 0.2;
+        els.setBreakInput.value = 45;
+        els.distanceInput.value = 4.5;
 
         els.error.textContent = '';
 
         els.welcome.style.display = 'block';
         els.welcome.innerHTML = `
-          <span class="sparkle">✨ Welcome back, Sofia ✨</span><br>
-          Elite ghosting mode activated: 10 sets · 12 moves · 3s reaction · 0.2s reset · 45s rest
+          <span class="sparkle">💜 Welcome back, Sofia 💜</span><br>
+          Purple mode activated: 10 sets · 12 moves · 3s to ball · 0.2s reset · 45s rest
         `;
 
         showSofiaExtras();
@@ -719,7 +922,7 @@
       } else {
         els.welcome.style.display = 'none';
         els.progressSection.style.display = 'none';
-        els.spotifySection.style.display = 'none';
+        document.body.classList.remove('sofia-mode');
         els.error.textContent = '⚠️ Invalid code. Try again.';
       }
     }
@@ -728,9 +931,10 @@
       const defs = [
         ['setsInput', 'Number of Sets', 1],
         ['movesInput', 'Moves per Set', 1],
-        ['secondsInput', 'Reaction Time (s)', 0.1],
+        ['secondsInput', 'Reaction Time / Time to Ball (s)', 0.1],
         ['moveBreakInput', 'Reposition Time (s)', 0],
-        ['setBreakInput', 'Rest Between Sets (s)', 0]
+        ['setBreakInput', 'Rest Between Sets (s)', 0],
+        ['distanceInput', 'Average Distance to Ball (m)', 0.1]
       ];
 
       for(const [id, label, min] of defs){
@@ -798,12 +1002,13 @@
       }
 
       els.error.textContent = '';
+      calculatePerformance();
 
-      const totalSets = +document.getElementById('setsInput').value;
-      const movesPerSet = +document.getElementById('movesInput').value;
-      const secondsPerMove = +document.getElementById('secondsInput').value;
-      const breakPerMove = +document.getElementById('moveBreakInput').value;
-      const breakPerSet = +document.getElementById('setBreakInput').value;
+      const totalSets = +els.setsInput.value;
+      const movesPerSet = +els.movesInput.value;
+      const secondsPerMove = +els.secondsInput.value;
+      const breakPerMove = +els.moveBreakInput.value;
+      const breakPerSet = +els.setBreakInput.value;
 
       const enabled = allDirections.filter(d => selected[d.key]);
 
@@ -908,6 +1113,18 @@
 
     buildButtons();
     preloadImages();
+    calculatePerformance();
+
+    [
+      els.setsInput,
+      els.movesInput,
+      els.secondsInput,
+      els.moveBreakInput,
+      els.setBreakInput,
+      els.distanceInput
+    ].forEach(input => {
+      input.addEventListener('input', calculatePerformance);
+    });
 
     els.start.onclick = run;
     els.stop.onclick = stop;
@@ -917,10 +1134,6 @@
 
     els.addProgress.onclick = addProgressMonth;
     els.saveProgress.onclick = updateProgressFromInputs;
-
-    els.spotifyBtn.onclick = function(){
-      window.open('https://open.spotify.com/playlist/3YMVrD0daHd8jLWDeKzpSm', '_blank');
-    };
 
     els.codeInput.addEventListener('keydown', function(e){
       if(e.key === 'Enter'){
