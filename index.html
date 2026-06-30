@@ -315,6 +315,16 @@
       color:var(--title);
     }
 
+    #clubLockerBulkInput{
+      width:100%;
+      min-height:160px;
+      padding:10px;
+      border:1px solid #ccc;
+      border-radius:8px;
+      font-family:monospace;
+      resize:vertical;
+    }
+
     .progress-row{
       display:grid;
       grid-template-columns:1fr .8fr .8fr 1.5fr auto;
@@ -341,12 +351,6 @@
     .chart-card h3{
       color:var(--title);
       margin:0 0 8px;
-    }
-
-    #correlationText{
-      font-weight:800;
-      color:var(--accent);
-      margin-top:8px;
     }
 
     #drillView{ 
@@ -542,7 +546,7 @@
 
     <div id="progressSection">
       <h2>📈 Sofia’s Progress</h2>
-      <p>Speed is auto-calculated. Universal Squash Rating helps compare real squash progress with ghosting speed.</p>
+      <p>Track ghosting speed and Universal Squash Rating over time.</p>
 
       <div class="sofia-inputs">
         <h3>Current Ghosting Entry</h3>
@@ -579,6 +583,16 @@
         <button id="addOldRatingBtn">Add Old Rating to Chart</button>
       </div>
 
+      <div class="sofia-inputs">
+        <h3>Import ClubLocker Rating History</h3>
+
+        <p>Paste the full ClubLocker rating history text here. The app will clean duplicates and use one rating per date.</p>
+
+        <textarea id="clubLockerBulkInput" placeholder="Paste ClubLocker rating history here..."></textarea>
+
+        <button id="importClubLockerBtn">Import ClubLocker History</button>
+      </div>
+
       <div id="progressRows"></div>
 
       <button id="saveProfileBtn">Save Sofia Profile</button>
@@ -595,12 +609,6 @@
       <div class="chart-card">
         <h3>Universal Squash Rating Progress</h3>
         <canvas id="ratingProgressChart"></canvas>
-      </div>
-
-      <div class="chart-card">
-        <h3>Universal Squash Rating Correlation Chart</h3>
-        <canvas id="ratingChart"></canvas>
-        <div id="correlationText">Correlation: —</div>
       </div>
     </div>
 
@@ -677,6 +685,7 @@
       dateInput: document.getElementById('dateInput'),
       oldRatingDateInput: document.getElementById('oldRatingDateInput'),
       oldRatingInput: document.getElementById('oldRatingInput'),
+      clubLockerBulkInput: document.getElementById('clubLockerBulkInput'),
 
       calculatorBox: document.querySelector('.calculator-box'),
 
@@ -691,19 +700,17 @@
       progressRows: document.getElementById('progressRows'),
       addProgress: document.getElementById('addProgressBtn'),
       addOldRating: document.getElementById('addOldRatingBtn'),
+      importClubLocker: document.getElementById('importClubLockerBtn'),
       saveProfile: document.getElementById('saveProfileBtn'),
       resetProfile: document.getElementById('resetProfileBtn'),
       progressChart: document.getElementById('progressChart'),
-      ratingProgressChart: document.getElementById('ratingProgressChart'),
-      ratingChart: document.getElementById('ratingChart'),
-      correlationText: document.getElementById('correlationText')
+      ratingProgressChart: document.getElementById('ratingProgressChart')
     };
 
     let controller = null;
     let skipBreakRequested = false;
     let progressChart = null;
     let ratingProgressChart = null;
-    let ratingChart = null;
 
     async function saveToGoogleSheets(payload){
       els.sheetStatus.textContent = 'Sending to Google Sheets...';
@@ -980,9 +987,168 @@
 
     function defaultProgressData(){
       return [
-        { month: '2026-06-01', speed: 1.20, rating: 4.00, notes: 'Starting point', type: 'progress' },
-        { month: '2026-07-01', speed: 1.35, rating: 4.15, notes: 'Better movement', type: 'progress' },
-        { month: '2026-08-01', speed: 1.50, rating: 4.25, notes: 'Goal pace', type: 'progress' }
+        { month: '2023-05-10', speed: null, rating: 1.98, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-05-17', speed: null, rating: 2.05, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-05-31', speed: null, rating: 2.15, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-06-07', speed: null, rating: 2.13, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-06-14', speed: null, rating: 2.17, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-06-21', speed: null, rating: 2.14, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-06-28', speed: null, rating: 2.12, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-07-05', speed: null, rating: 2.13, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-07-12', speed: null, rating: 2.17, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-07-19', speed: null, rating: 2.22, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-07-26', speed: null, rating: 2.23, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-08-02', speed: null, rating: 2.19, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-08-09', speed: null, rating: 2.25, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-08-16', speed: null, rating: 2.26, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-08-23', speed: null, rating: 2.30, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-08-30', speed: null, rating: 2.26, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-09-06', speed: null, rating: 2.31, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-09-13', speed: null, rating: 2.34, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-09-20', speed: null, rating: 2.31, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-09-27', speed: null, rating: 2.27, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-10-04', speed: null, rating: 2.31, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-10-11', speed: null, rating: 2.36, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-10-18', speed: null, rating: 2.54, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-10-25', speed: null, rating: 2.64, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-11-01', speed: null, rating: 2.68, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-11-08', speed: null, rating: 2.70, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-11-15', speed: null, rating: 2.72, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-11-22', speed: null, rating: 2.70, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-11-29', speed: null, rating: 2.77, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-12-06', speed: null, rating: 2.75, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-12-13', speed: null, rating: 2.76, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-12-20', speed: null, rating: 2.81, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2023-12-27', speed: null, rating: 2.81, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-01-03', speed: null, rating: 2.81, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-01-10', speed: null, rating: 2.84, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-01-17', speed: null, rating: 2.84, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-01-24', speed: null, rating: 2.92, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-01-31', speed: null, rating: 3.00, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-02-07', speed: null, rating: 2.97, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-02-14', speed: null, rating: 3.02, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-02-21', speed: null, rating: 3.02, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-02-28', speed: null, rating: 3.05, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-03-06', speed: null, rating: 3.03, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-03-13', speed: null, rating: 3.05, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-03-20', speed: null, rating: 3.06, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-03-27', speed: null, rating: 3.07, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-04-03', speed: null, rating: 3.09, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-04-10', speed: null, rating: 3.12, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-04-17', speed: null, rating: 3.11, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-04-24', speed: null, rating: 3.17, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-05-01', speed: null, rating: 3.17, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-05-08', speed: null, rating: 3.21, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-05-15', speed: null, rating: 3.23, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-05-22', speed: null, rating: 3.24, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-05-29', speed: null, rating: 3.30, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-06-05', speed: null, rating: 3.31, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-06-12', speed: null, rating: 3.35, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-06-19', speed: null, rating: 3.34, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-06-26', speed: null, rating: 3.41, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-07-03', speed: null, rating: 3.42, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-07-10', speed: null, rating: 3.43, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-07-17', speed: null, rating: 3.43, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-07-24', speed: null, rating: 3.45, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-07-31', speed: null, rating: 3.45, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-08-07', speed: null, rating: 3.44, notes: 'ClubLocker import · US SQUASH', type: 'clublockerRating' },
+        { month: '2024-08-14', speed: null, rating: 3.45, notes: 'ClubLocker import · US SQUASH', type: 'clublockerRating' },
+        { month: '2024-08-21', speed: null, rating: 3.46, notes: 'ClubLocker import · US SQUASH', type: 'clublockerRating' },
+        { month: '2024-08-28', speed: null, rating: 3.51, notes: 'ClubLocker import · US SQUASH', type: 'clublockerRating' },
+        { month: '2024-09-04', speed: null, rating: 3.51, notes: 'ClubLocker import · US SQUASH', type: 'clublockerRating' },
+        { month: '2024-09-11', speed: null, rating: 3.53, notes: 'ClubLocker import · US SQUASH', type: 'clublockerRating' },
+        { month: '2024-09-18', speed: null, rating: 3.53, notes: 'ClubLocker import · US SQUASH', type: 'clublockerRating' },
+        { month: '2024-09-25', speed: null, rating: 3.54, notes: 'ClubLocker import · US SQUASH', type: 'clublockerRating' },
+        { month: '2024-10-02', speed: null, rating: 3.44, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-10-09', speed: null, rating: 3.57, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-10-16', speed: null, rating: 3.59, notes: 'ClubLocker import · US SQUASH', type: 'clublockerRating' },
+        { month: '2024-10-23', speed: null, rating: 3.62, notes: 'ClubLocker import · US SQUASH', type: 'clublockerRating' },
+        { month: '2024-10-30', speed: null, rating: 3.65, notes: 'ClubLocker import · US SQUASH', type: 'clublockerRating' },
+        { month: '2024-11-06', speed: null, rating: 3.66, notes: 'ClubLocker import · US SQUASH', type: 'clublockerRating' },
+        { month: '2024-11-13', speed: null, rating: 3.68, notes: 'ClubLocker import · US SQUASH', type: 'clublockerRating' },
+        { month: '2024-11-20', speed: null, rating: 3.59, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-11-27', speed: null, rating: 3.71, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-12-04', speed: null, rating: 3.72, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-12-11', speed: null, rating: 3.77, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-12-18', speed: null, rating: 3.78, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2024-12-25', speed: null, rating: 3.79, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-01-01', speed: null, rating: 3.83, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-01-08', speed: null, rating: 3.84, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-01-15', speed: null, rating: 3.86, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-01-22', speed: null, rating: 3.89, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-01-29', speed: null, rating: 3.91, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-02-05', speed: null, rating: 3.93, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-02-12', speed: null, rating: 3.94, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-02-19', speed: null, rating: 3.95, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-02-26', speed: null, rating: 3.97, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-03-05', speed: null, rating: 3.96, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-03-12', speed: null, rating: 3.97, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-03-19', speed: null, rating: 3.97, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-03-26', speed: null, rating: 3.97, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-04-02', speed: null, rating: 3.98, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-04-09', speed: null, rating: 3.99, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-04-16', speed: null, rating: 3.99, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-04-23', speed: null, rating: 3.99, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-04-30', speed: null, rating: 4.01, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-05-07', speed: null, rating: 4.02, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-05-14', speed: null, rating: 4.02, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-05-21', speed: null, rating: 4.03, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-05-28', speed: null, rating: 4.03, notes: 'ClubLocker import · US SQUASH', type: 'clublockerRating' },
+        { month: '2025-06-04', speed: null, rating: 4.04, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-06-11', speed: null, rating: 4.05, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-06-18', speed: null, rating: 4.06, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-06-25', speed: null, rating: 4.05, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-07-02', speed: null, rating: 4.05, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-07-09', speed: null, rating: 4.06, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-07-16', speed: null, rating: 4.06, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-07-23', speed: null, rating: 4.06, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-07-30', speed: null, rating: 4.06, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-08-06', speed: null, rating: 4.06, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-08-13', speed: null, rating: 4.06, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-08-20', speed: null, rating: 4.06, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-08-27', speed: null, rating: 4.06, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-09-03', speed: null, rating: 4.06, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-09-10', speed: null, rating: 4.06, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-09-17', speed: null, rating: 4.06, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-09-24', speed: null, rating: 4.06, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-10-01', speed: null, rating: 4.07, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-10-08', speed: null, rating: 4.08, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-10-15', speed: null, rating: 4.05, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-10-22', speed: null, rating: 4.06, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-10-29', speed: null, rating: 4.07, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-11-05', speed: null, rating: 4.08, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-11-12', speed: null, rating: 4.09, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-11-19', speed: null, rating: 4.10, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-11-26', speed: null, rating: 4.11, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-12-03', speed: null, rating: 4.10, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-12-10', speed: null, rating: 4.12, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-12-17', speed: null, rating: 4.14, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-12-24', speed: null, rating: 4.14, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2025-12-31', speed: null, rating: 4.14, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2026-01-07', speed: null, rating: 4.14, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2026-01-14', speed: null, rating: 4.14, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2026-01-21', speed: null, rating: 4.15, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2026-01-28', speed: null, rating: 4.16, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2026-02-04', speed: null, rating: 4.17, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2026-02-11', speed: null, rating: 4.18, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2026-02-18', speed: null, rating: 4.19, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2026-02-25', speed: null, rating: 4.18, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2026-03-04', speed: null, rating: 4.19, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2026-03-11', speed: null, rating: 4.19, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2026-03-18', speed: null, rating: 4.19, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2026-03-25', speed: null, rating: 4.20, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2026-04-01', speed: null, rating: 4.20, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2026-04-08', speed: null, rating: 4.20, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2026-04-15', speed: null, rating: 4.22, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2026-04-22', speed: null, rating: 4.22, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2026-04-29', speed: null, rating: 4.22, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2026-05-06', speed: null, rating: 4.22, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2026-05-13', speed: null, rating: 4.23, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2026-05-20', speed: null, rating: 4.23, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2026-05-27', speed: null, rating: 4.24, notes: 'ClubLocker import · US SQUASH', type: 'clublockerRating' },
+        { month: '2026-06-03', speed: null, rating: 4.25, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2026-06-10', speed: null, rating: 4.25, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' },
+        { month: '2026-06-17', speed: null, rating: 4.26, notes: 'ClubLocker import · Universal Squash Rating', type: 'clublockerRating' }
       ];
     }
 
@@ -1072,39 +1238,6 @@
 
       saveProgressData(data);
       renderAllCharts();
-    }
-
-    function calculateCorrelation(data){
-      const clean = data.filter(item => Number(item.speed) > 0 && Number(item.rating) > 0);
-
-      if(clean.length < 2){
-        return null;
-      }
-
-      const xs = clean.map(item => Number(item.speed));
-      const ys = clean.map(item => Number(item.rating));
-
-      const meanX = xs.reduce((a,b) => a + b, 0) / xs.length;
-      const meanY = ys.reduce((a,b) => a + b, 0) / ys.length;
-
-      let numerator = 0;
-      let denomX = 0;
-      let denomY = 0;
-
-      for(let i = 0; i < xs.length; i++){
-        const dx = xs[i] - meanX;
-        const dy = ys[i] - meanY;
-
-        numerator += dx * dy;
-        denomX += dx * dx;
-        denomY += dy * dy;
-      }
-
-      if(denomX === 0 || denomY === 0){
-        return null;
-      }
-
-      return numerator / Math.sqrt(denomX * denomY);
     }
 
     function renderProgressChart(){
@@ -1213,81 +1346,9 @@
       });
     }
 
-    function renderRatingChart(){
-      const data = getProgressData();
-      const points = data
-        .filter(item => Number(item.speed) > 0 && Number(item.rating) > 0)
-        .map(item => ({
-          x: Number(item.speed),
-          y: Number(item.rating),
-          label: item.month
-        }));
-
-      if(ratingChart){
-        ratingChart.destroy();
-      }
-
-      ratingChart = new Chart(els.ratingChart, {
-        type: 'scatter',
-        data: {
-          datasets: [{
-            label: 'Universal Squash Rating vs Speed',
-            data: points,
-            pointRadius: 6,
-            pointHoverRadius: 8
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: true },
-            tooltip: {
-              callbacks: {
-                label: function(context){
-                  const point = context.raw;
-                  return `${point.label}: ${point.x} m/s, USR ${point.y}`;
-                }
-              }
-            }
-          },
-          scales: {
-            x: {
-              title: {
-                display: true,
-                text: 'Speed to ball (m/s)'
-              }
-            },
-            y: {
-              title: {
-                display: true,
-                text: 'Universal Squash Rating'
-              }
-            }
-          }
-        }
-      });
-
-      const r = calculateCorrelation(data);
-
-      if(r === null){
-        els.correlationText.textContent = 'Correlation: add at least 2 ghosting entries with speed + USR';
-      } else {
-        let interpretation = 'weak';
-
-        if(Math.abs(r) >= 0.7){
-          interpretation = 'strong';
-        } else if(Math.abs(r) >= 0.4){
-          interpretation = 'moderate';
-        }
-
-        els.correlationText.textContent = `Correlation: r = ${r.toFixed(2)} (${interpretation})`;
-      }
-    }
-
     function renderAllCharts(){
       renderProgressChart();
       renderRatingProgressChart();
-      renderRatingChart();
     }
 
     function addProgressMonth(){
@@ -1405,6 +1466,136 @@
       `;
 
       els.oldRatingInput.value = '';
+    }
+
+    function parseClubLockerRatings(rawText){
+      const lines = rawText
+        .split(/\r?\n/)
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+
+      const records = [];
+
+      for(let i = 0; i <= lines.length - 6; i++){
+        const season = lines[i];
+        const date = lines[i + 1];
+        const division = lines[i + 2].replace(/`/g, '').trim();
+        const rank = lines[i + 3];
+        const ratingRaw = lines[i + 4];
+        const source = lines[i + 5];
+
+        const looksLikeSeason = /^\d{4}-\d{4}$/.test(season);
+        const looksLikeDate = /^\d{4}-\d{2}-\d{2}$/.test(date);
+        const rating = parseFloat(ratingRaw);
+
+        if(
+          looksLikeSeason &&
+          looksLikeDate &&
+          !isNaN(rating) &&
+          (
+            source === 'Universal Squash Rating' ||
+            source === 'US SQUASH' ||
+            source === 'High Schools'
+          )
+        ){
+          records.push({
+            season,
+            date,
+            division,
+            rank,
+            rating: cleanRating(rating),
+            source
+          });
+
+          i += 5;
+        }
+      }
+
+      function sourcePriority(source){
+        if(source === 'Universal Squash Rating') return 1;
+        if(source === 'US SQUASH') return 2;
+        if(source === 'High Schools') return 3;
+        return 99;
+      }
+
+      const byDate = new Map();
+
+      records.forEach(record => {
+        const existing = byDate.get(record.date);
+
+        if(!existing || sourcePriority(record.source) < sourcePriority(existing.source)){
+          byDate.set(record.date, record);
+        }
+      });
+
+      return Array.from(byDate.values())
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .map(record => ({
+          month: record.date,
+          speed: null,
+          rating: record.rating,
+          notes: `ClubLocker import · ${record.source} · ${record.division}`,
+          type: 'clublockerRating'
+        }));
+    }
+
+    async function importClubLockerHistory(){
+      const rawText = els.clubLockerBulkInput.value.trim();
+
+      if(!rawText){
+        els.error.textContent = '⚠️ Paste your ClubLocker rating history first.';
+        return;
+      }
+
+      const importedEntries = parseClubLockerRatings(rawText);
+
+      if(importedEntries.length === 0){
+        els.error.textContent = '⚠️ Could not find valid ClubLocker rating rows.';
+        return;
+      }
+
+      els.error.textContent = '';
+
+      const currentData = getProgressData();
+
+      const withoutOldClubLockerImports = currentData.filter(item => item.type !== 'clublockerRating');
+
+      const mergedData = withoutOldClubLockerImports
+        .concat(importedEntries)
+        .sort((a, b) => String(a.month).localeCompare(String(b.month)));
+
+      saveProgressData(mergedData);
+      renderProgressRows();
+      renderAllCharts();
+
+      els.sheetStatus.textContent = `Importing ${importedEntries.length} ClubLocker ratings to Google Sheets...`;
+
+      for(const entry of importedEntries){
+        await saveToGoogleSheets({
+          type: 'clublockerRating',
+          sets: '',
+          movesPerSet: '',
+          reactionTime: '',
+          repositionTime: '',
+          restBetweenSets: '',
+          distanceToBall: '',
+          speed: '',
+          totalMoves: '',
+          workRatio: '',
+          stamina: '',
+          rating: entry.rating,
+          progressDate: entry.month,
+          notes: entry.notes
+        });
+      }
+
+      els.sheetStatus.textContent = `Imported ${importedEntries.length} ClubLocker ratings. Check Google Sheets to confirm.`;
+
+      els.welcome.style.display = 'block';
+      els.welcome.innerHTML = `
+        <span class="sparkle">📈 ClubLocker history imported</span><br>
+        Added ${importedEntries.length} rating entries to your USR progress chart.
+      `;
     }
 
     function showSofiaExtras(){
@@ -1653,6 +1844,7 @@
 
     els.addProgress.onclick = addProgressMonth;
     els.addOldRating.onclick = addOldRating;
+    els.importClubLocker.onclick = importClubLockerHistory;
     els.saveProfile.onclick = saveSofiaProfile;
     els.resetProfile.onclick = resetSofiaProfile;
 
