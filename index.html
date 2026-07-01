@@ -474,8 +474,8 @@
       font-size:clamp(1.4rem, 4vw, 3rem);
       font-weight:900;
       color:var(--title);
-      margin:0 0 8px;
-      min-height:1.8rem;
+      margin:0 0 2px;
+      min-height:1.4rem;
     }
 
     #direction{ 
@@ -485,6 +485,20 @@
       margin:0 0 2px; 
       line-height:1;
       min-height:0;
+    }
+
+    #countdown{ 
+      font-size:clamp(10rem, 38vw, 28rem);
+      font-weight:1000;
+      color:var(--accent); 
+      min-height:0;
+      line-height:.85;
+      letter-spacing:-0.08em;
+      text-shadow:0 8px 20px rgba(0,0,0,.08);
+    }
+
+    #countdown:empty{
+      display:none;
     }
 
     #image{ 
@@ -497,16 +511,6 @@
       border-radius:12px; 
       border:1px solid #eee; 
       object-fit:contain;
-    }
-
-    #countdown{ 
-      font-size:clamp(10rem, 38vw, 28rem);
-      font-weight:1000;
-      color:var(--accent); 
-      min-height:.95em; 
-      line-height:.85;
-      letter-spacing:-0.08em;
-      text-shadow:0 8px 20px rgba(0,0,0,.08);
     }
 
     #stopBtn,
@@ -1076,9 +1080,9 @@
     function defaultSofiaProfile(){
       return {
         sets: 10,
-        movesPerSet: 12,
-        reactionTime: 3,
-        repositionTime: 0.2,
+        movesPerSet: 20,
+        reactionTime: 1.4,
+        repositionTime: 1.4,
         restBetweenSets: 45,
         distanceToBall: 4.5,
         rating: 4.00,
