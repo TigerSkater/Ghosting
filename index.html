@@ -576,7 +576,6 @@
   <h1>Squash Ghosting Drill</h1>
 
   <div id="configContainer">
-
     <div id="homeStartSlot">
       <button id="startBtn" class="top-start-btn">Start Drill</button>
     </div>
@@ -591,7 +590,6 @@
         </div>
 
         <div id="welcomeMessage"></div>
-
         <div id="sofiaStartSlot"></div>
       </details>
     </div>
@@ -964,13 +962,13 @@
       });
     }
 
-  function setDefaultDrillValues(){
-    if(!els.setsInput.value) els.setsInput.value = 10;
-    if(!els.movesInput.value) els.movesInput.value = 20;
-    if(!els.secondsInput.value) els.secondsInput.value = 1.4;
-    if(!els.moveBreakInput.value) els.moveBreakInput.value = 1.4;
-    if(!els.setBreakInput.value) els.setBreakInput.value = 45;
-  }
+    function setDefaultDrillValues(){
+      if(!els.setsInput.value) els.setsInput.value = 10;
+      if(!els.movesInput.value) els.movesInput.value = 20;
+      if(!els.secondsInput.value) els.secondsInput.value = 1.4;
+      if(!els.moveBreakInput.value) els.moveBreakInput.value = 1.4;
+      if(!els.setBreakInput.value) els.setBreakInput.value = 45;
+    }
 
     function playBeep(){
       try{
@@ -1304,14 +1302,7 @@
         options: {
           responsive: true,
           plugins: {
-            legend: { display: true },
-            tooltip: {
-              callbacks: {
-                label: function(context){
-                  return `${context.parsed.y} m/s`;
-                }
-              }
-            }
+            legend: { display: true }
           },
           scales: {
             y: {
@@ -1357,14 +1348,7 @@
         options: {
           responsive: true,
           plugins: {
-            legend: { display: true },
-            tooltip: {
-              callbacks: {
-                label: function(context){
-                  return `USR ${context.parsed.y}`;
-                }
-              }
-            }
+            legend: { display: true }
           },
           scales: {
             y: {
@@ -1687,7 +1671,7 @@
     }
 
     function applyTrainingCode(){
-      const code = els.codeInput.value.trim().toLowerCase();
+      const code = String(els.codeInput.value || '').trim().toLowerCase();
 
       if(code === 'sofiahtang'){
         loadSofiaProfile();
@@ -1784,123 +1768,36 @@
 
     document.addEventListener('click', unlockAudioOnce, { once:true });
     document.addEventListener('touchstart', unlockAudioOnce, { once:true });
+
     async function preStartCountdown(signal){
-  els.setStatus.textContent = 'Get Ready';
-  els.direction.textContent = '';
-  els.image.style.display = 'none';
-  els.skipBreak.style.display = 'none';
+      els.setStatus.textContent = 'Get Ready';
+      els.direction.textContent = '';
+      els.image.style.display = 'none';
+      els.skipBreak.style.display = 'none';
 
-  for(let t = 10; t > 0; t--){
-    els.countdown.textContent = String(t);
-    playBeep();
-    await sleep(1000, signal);
-  }
-
-  els.countdown.textContent = 'GO';
-  playBeep();
-  await sleep(600, signal);
-  els.countdown.textContent = '';
-}
-    async function run(){
-  setDefaultDrillValues();
-  calculatePerformance();
-
-  const err = validate();
-
-  if(err){
-    els.error.textContent = '⚠️ ' + err;
-    els.error.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    return;
-  }
-
-  els.error.textContent = '';
-
-  const totalSets = Number(els.setsInput.value);
-  const movesPerSet = Number(els.movesInput.value);
-  const secondsPerMove = Number(els.secondsInput.value);
-  const breakPerMove = Number(els.moveBreakInput.value);
-  const breakPerSet = Number(els.setBreakInput.value);
-
-  const enabled = allDirections.filter(d => selected[d.key]);
-
-  controller = new AbortController();
-  const { signal } = controller;
-
-  els.config.style.display = 'none';
-  els.end.classList.remove('active');
-  els.drill.classList.add('active');
-  els.start.disabled = true;
-
-  els.setStatus.textContent = '';
-  els.direction.textContent = '';
-  els.countdown.textContent = '';
-  els.image.style.display = 'none';
-
-  try{
-    await preStartCountdown(signal);
-
-    for(let s = 1; s <= totalSets; s++){
-      els.setStatus.textContent = `Set ${s} of ${totalSets}`;
-
-      for(let m = 1; m <= movesPerSet; m++){
-        const step = pick(enabled);
-
-        els.setStatus.textContent = `Set ${s} of ${totalSets} · Move ${m} of ${movesPerSet}`;
-        els.direction.textContent = step.name;
-        els.countdown.textContent = '';
-
-        els.image.src = `images/${step.key}.png`;
-        els.image.style.display = 'block';
-
+      for(let t = 10; t > 0; t--){
+        els.countdown.textContent = String(t);
         playBeep();
-
-        await sleep(secondsPerMove * 1000, signal);
-
-        els.direction.textContent = '';
-        els.image.removeAttribute('src');
-        els.image.style.display = 'none';
-
-        playBeep();
-
-        if(breakPerMove > 0){
-          await sleep(breakPerMove * 1000, signal);
-        }
+        await sleep(1000, signal);
       }
 
-      if(s < totalSets){
-        els.setStatus.textContent = `Break after Set ${s}`;
-        els.direction.textContent = 'Rest';
-        els.image.style.display = 'none';
-        els.skipBreak.style.display = 'inline-block';
-        skipBreakRequested = false;
-
-        for(let t = Math.max(0, Math.round(breakPerSet)); t > 0; t--){
-          if(skipBreakRequested) break;
-
-          els.countdown.textContent = String(t);
-          playBeep();
-
-          await sleep(1000, signal);
-        }
-
-        els.skipBreak.style.display = 'none';
-        els.countdown.textContent = '';
-        els.direction.textContent = '';
-      }
+      els.countdown.textContent = 'GO';
+      playBeep();
+      await sleep(600, signal);
+      els.countdown.textContent = '';
     }
 
-    els.drill.classList.remove('active');
-    els.end.classList.add('active');
-    els.setStatus.textContent = '';
-    els.direction.textContent = '';
-    els.countdown.textContent = '';
-    els.image.style.display = 'none';
-    els.start.disabled = false;
+    async function run(){
+      setDefaultDrillValues();
+      calculatePerformance();
 
-  } catch(e){
-    stop();
-  }
-}
+      const err = validate();
+
+      if(err){
+        els.error.textContent = '⚠️ ' + err;
+        els.error.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
 
       els.error.textContent = '';
 
@@ -1926,6 +1823,8 @@
       els.image.style.display = 'none';
 
       try{
+        await preStartCountdown(signal);
+
         for(let s = 1; s <= totalSets; s++){
           els.setStatus.textContent = `Set ${s} of ${totalSets}`;
 
